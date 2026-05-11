@@ -1,0 +1,25 @@
+spring.application.name=svir-api
+
+server.port=8080
+
+spring.datasource.url=jdbc:mysql://localhost:3306/reposteria?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
+spring.datasource.username=TU_USUARIO_MYSQL
+spring.datasource.password=TU_CONTRASEÑA_MYSQL
+
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=false
+
+spring.flyway.enabled=false
+
+spring.jackson.time-zone=America/Lima
+
+# Genera una clave aleatoria larga en Base64, por ejemplo:
+# openssl rand -base64 48
+app.jwt.secret=PON_AQUI_TU_SECRETO_JWT_EN_BASE64
+app.jwt.expiration-ms=86400000
+
+app.upload.dir=uploads
+
+spring.servlet.multipart.enabled=true
+spring.servlet.multipart.max-file-size=8MB
+spring.servlet.multipart.max-request-size=10MB

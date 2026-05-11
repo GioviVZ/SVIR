@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VS Code
+.vscode/
+
+# Java / Maven build output
+backend/svir-api/target/
+
+# Application properties con credenciales (NO subir)
+backend/svir-api/src/main/resources/application.properties
+
+# Logs
+*.log
+logs/
+
+# Archivos de entorno
+.env
+.env.*

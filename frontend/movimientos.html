@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SVIR | Movimientos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">S</div>
+      <div>
+        <h5 class="mb-0 fw-bold">SVIR</h5>
+        <small>Gestión</small>
+      </div>
+    </div>
+
+          <nav class="nav flex-column sidebar-nav">
+
+        <div class="sidebar-group" data-roles="VENTAS,ADMIN">
+          <button class="sidebar-group-btn collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#colVentas" aria-expanded="false">
+            <span class="sidebar-group-icon"><i class="bi bi-bag-fill"></i></span>
+            <span class="sidebar-group-label">Ventas</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+          </button>
+          <div class="collapse" id="colVentas">
+            <div class="sidebar-sub">
+              <a class="nav-link" href="pos.html"><i class="bi bi-shop"></i> Punto de Venta</a>
+              <a class="nav-link" href="productos.html"><i class="bi bi-box-seam"></i> Productos</a>
+              <a class="nav-link" href="pedidos.html"><i class="bi bi-clipboard-check"></i> Pedidos</a>
+              <a class="nav-link" href="movimientos.html"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
+              <a class="nav-link" href="clientes.html"><i class="bi bi-people-fill"></i> Clientes</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-group" data-roles="COCINA,ADMIN">
+          <button class="sidebar-group-btn collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#colCocina" aria-expanded="false">
+            <span class="sidebar-group-icon"><i class="bi bi-fire"></i></span>
+            <span class="sidebar-group-label">Cocina</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+          </button>
+          <div class="collapse" id="colCocina">
+            <div class="sidebar-sub">
+              <a class="nav-link" href="produccion.html"><i class="bi bi-gear-wide-connected"></i> Producción</a>
+              <a class="nav-link" href="ingredientes.html"><i class="bi bi-basket-fill"></i> Ingredientes</a>
+              <a class="nav-link" href="recetas.html"><i class="bi bi-journal-text"></i> Recetas</a>
+              <a class="nav-link" href="movimientos.html"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-group" data-roles="ADMIN">
+          <button class="sidebar-group-btn collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#colAdmin" aria-expanded="false">
+            <span class="sidebar-group-icon"><i class="bi bi-shield-fill-check"></i></span>
+            <span class="sidebar-group-label">Administrador</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+          </button>
+          <div class="collapse" id="colAdmin">
+            <div class="sidebar-sub">
+              <a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a class="nav-link" href="usuarios.html"><i class="bi bi-person-gear"></i> Usuarios</a>
+            </div>
+          </div>
+        </div>
+
+      </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <h3 class="fw-bold mb-1">Movimientos</h3>
+        <p class="text-muted mb-0">Historial de entradas y salidas de inventario</p>
+      </div>
+
+      <div class="d-flex gap-2 align-items-center">
+        <span id="userInfo" class="small text-muted"></span>
+        <button class="btn btn-outline-danger btn-sm" onclick="logout()">Salir</button>
+      </div>
+    </header>
+
+    <div class="card page-card">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-md-center mb-3">
+          <div>
+            <h5 class="fw-bold mb-1">Listado de movimientos</h5>
+            <p class="text-muted mb-0">Consulta el historial generado por inventario y producción</p>
+          </div>
+          <div class="search-box">
+            <input type="text" id="buscarMovimiento" class="form-control" placeholder="Buscar por tipo, ingrediente, producto o ID">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Referencia</th>
+                <th>Cantidad</th>
+                <th>Motivo</th>
+                <th>Usuario</th>
+              </tr>
+            </thead>
+            <tbody id="tablaMovimientos">
+              <tr>
+                <td colspan="6" class="text-center text-muted">Cargando movimientos...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/movimientos.js"></script>
+</body>
+</html>

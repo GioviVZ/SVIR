@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SVIR | Punto de Venta</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">S</div>
+      <div>
+        <h5 class="mb-0 fw-bold">SVIR</h5>
+        <small>Gestión</small>
+      </div>
+    </div>
+
+          <nav class="nav flex-column sidebar-nav">
+
+        <div class="sidebar-group" data-roles="VENTAS,ADMIN">
+          <button class="sidebar-group-btn collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#colVentas" aria-expanded="false">
+            <span class="sidebar-group-icon"><i class="bi bi-bag-fill"></i></span>
+            <span class="sidebar-group-label">Ventas</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+          </button>
+          <div class="collapse" id="colVentas">
+            <div class="sidebar-sub">
+              <a class="nav-link" href="pos.html"><i class="bi bi-shop"></i> Punto de Venta</a>
+              <a class="nav-link" href="productos.html"><i class="bi bi-box-seam"></i> Productos</a>
+              <a class="nav-link" href="pedidos.html"><i class="bi bi-clipboard-check"></i> Pedidos</a>
+              <a class="nav-link" href="movimientos.html"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
+              <a class="nav-link" href="clientes.html"><i class="bi bi-people-fill"></i> Clientes</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-group" data-roles="COCINA,ADMIN">
+          <button class="sidebar-group-btn collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#colCocina" aria-expanded="false">
+            <span class="sidebar-group-icon"><i class="bi bi-fire"></i></span>
+            <span class="sidebar-group-label">Cocina</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+          </button>
+          <div class="collapse" id="colCocina">
+            <div class="sidebar-sub">
+              <a class="nav-link" href="produccion.html"><i class="bi bi-gear-wide-connected"></i> Producción</a>
+              <a class="nav-link" href="ingredientes.html"><i class="bi bi-basket-fill"></i> Ingredientes</a>
+              <a class="nav-link" href="recetas.html"><i class="bi bi-journal-text"></i> Recetas</a>
+              <a class="nav-link" href="movimientos.html"><i class="bi bi-arrow-left-right"></i> Movimientos</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-group" data-roles="ADMIN">
+          <button class="sidebar-group-btn collapsed" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#colAdmin" aria-expanded="false">
+            <span class="sidebar-group-icon"><i class="bi bi-shield-fill-check"></i></span>
+            <span class="sidebar-group-label">Administrador</span>
+            <i class="bi bi-chevron-down sidebar-chevron"></i>
+          </button>
+          <div class="collapse" id="colAdmin">
+            <div class="sidebar-sub">
+              <a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a class="nav-link" href="usuarios.html"><i class="bi bi-person-gear"></i> Usuarios</a>
+            </div>
+          </div>
+        </div>
+
+      </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <h3 class="fw-bold mb-1">Punto de Venta</h3>
+        <p class="text-muted mb-0">Ventas presenciales en tienda</p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span id="userInfo" class="small text-muted"></span>
+        <button class="btn btn-outline-danger btn-sm" onclick="logout()">Salir</button>
+      </div>
+    </header>
+
+    <div class="row g-4 align-items-start">
+
+      <!-- Columna productos -->
+      <div class="col-lg-7">
+        <div class="card page-card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="fw-bold mb-0">Productos</h5>
+              <div class="search-box">
+                <input type="text" id="buscarPOS" class="form-control" placeholder="Buscar producto...">
+              </div>
+            </div>
+            <div class="row g-2" id="posProductosGrid">
+              <div class="col-12 text-center text-muted py-4">Cargando productos...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna carrito -->
+      <div class="col-lg-5">
+        <div class="pos-cart-panel">
+          <div class="pos-cart-header">
+            <h5 class="fw-bold mb-0">Carrito</h5>
+            <p class="mb-0 opacity-75 small">Haz clic en un producto para agregar</p>
+          </div>
+
+          <div class="pos-cart-body" id="posCartBody">
+            <div class="pos-empty-cart">
+              El carrito está vacío.<br>Haz clic en un producto para agregar.
+            </div>
+          </div>
+
+          <div class="pos-cart-footer">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="text-muted fw-semibold">Total</span>
+              <span class="pos-total" id="posTotal">S/ 0.00</span>
+            </div>
+
+            <div class="mb-3 pos-cliente-wrap">
+              <input type="text" id="posClienteBuscar" class="form-control"
+                placeholder="Buscar cliente por nombre o DNI..." autocomplete="off">
+              <input type="hidden" id="posClienteId">
+              <div id="posClienteSugerencias" class="pos-sugerencias d-none"></div>
+              <div id="posClienteSeleccionado" class="pos-cliente-tag d-none">
+                <span id="posClienteNombre"></span>
+                <button type="button" onclick="limpiarCliente()" class="pos-cliente-tag-clear">✕</button>
+              </div>
+            </div>
+
+            <button id="btnCobrar" class="btn btn-brand btn-lg w-100" onclick="cobrar()" disabled>
+              Cobrar
+            </button>
+
+            <div id="posResultado" class="pos-result-box d-none mt-3"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Modal Boleta -->
+<div class="modal fade" id="boletaModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content border-0 rounded-4">
+      <div class="modal-body p-0">
+
+        <!-- Contenido imprimible -->
+        <div class="boleta-ticket" id="boletaContenido">
+          <div class="boleta-header">
+            <div class="boleta-logo">DM</div>
+            <h5 class="boleta-negocio">Dulce Momento</h5>
+            <p class="boleta-sub">Repostería artesanal</p>
+            <p class="boleta-sub" id="boletaFecha"></p>
+          </div>
+
+          <div class="boleta-divider">· · · · · · · · · · · · · · · · ·</div>
+
+          <div class="boleta-cliente" id="boletaCliente"></div>
+
+          <table class="boleta-tabla" id="boletaItems"></table>
+
+          <div class="boleta-divider">· · · · · · · · · · · · · · · · ·</div>
+
+          <div class="boleta-total-row">
+            <span>TOTAL</span>
+            <span id="boletaTotal">S/ 0.00</span>
+          </div>
+
+          <div class="boleta-divider">· · · · · · · · · · · · · · · · ·</div>
+
+          <p class="boleta-gracias">¡Gracias por su compra!</p>
+        </div>
+
+      </div>
+      <div class="modal-footer border-0 pt-0 gap-2">
+        <button class="btn btn-outline-secondary flex-fill" data-bs-dismiss="modal">Cerrar</button>
+        <button class="btn btn-brand flex-fill" onclick="imprimirBoleta()">Imprimir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/pos.js"></script>
+</body>
+</html>
