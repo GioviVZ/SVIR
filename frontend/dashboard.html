@@ -19,7 +19,7 @@
         </div>
       </div>
 
-            <nav class="nav flex-column sidebar-nav">
+      <nav class="nav flex-column sidebar-nav">
 
         <div class="sidebar-group" data-roles="VENTAS,ADMIN">
           <button class="sidebar-group-btn collapsed" type="button"
@@ -77,8 +77,9 @@
     <main class="main-content">
       <header class="topbar">
         <div>
-          <h3 class="mb-1 fw-bold">Dashboard</h3>
-          <p class="text-muted mb-0" id="fechaHoy"></p>
+          <p class="dash-greeting mb-1" id="saludo"></p>
+          <h3 class="mb-0 fw-bold">Dashboard</h3>
+          <p class="text-muted mb-0 small mt-1" id="fechaHoy"></p>
         </div>
         <div class="d-flex align-items-center gap-2">
           <span id="userInfo" class="text-muted small"></span>
@@ -88,108 +89,152 @@
 
       <section class="container-fluid px-0">
 
-        <!-- Fila 1: Ingresos -->
+        <!-- Fila 1: Ingresos principales -->
         <div class="row g-3 mb-3">
-          <div class="col-md-6 col-xl-4">
-            <div class="card metric-card metric-highlight">
+
+          <div class="col-md-6 col-xl-4 dash-animate" style="animation-delay:0ms">
+            <div class="card metric-card metric-highlight h-100">
               <div class="card-body">
-                <p class="metric-label">Ventas de hoy</p>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <p class="metric-label mb-0">Ventas de hoy</p>
+                  <div class="metric-icon metric-icon-white">
+                    <i class="bi bi-cash-coin"></i>
+                  </div>
+                </div>
                 <h2 id="ventasHoy" class="metric-value">S/ 0.00</h2>
-                <p class="metric-sub" id="pedidosHoy">0 pedidos</p>
+                <p class="metric-sub" id="pedidosHoy">0 pedidos hoy</p>
               </div>
             </div>
           </div>
 
-          <div class="col-md-6 col-xl-4">
-            <div class="card metric-card">
+          <div class="col-md-6 col-xl-4 dash-animate" style="animation-delay:80ms">
+            <div class="card metric-card h-100">
               <div class="card-body">
-                <p class="metric-label">Ventas del mes</p>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <p class="metric-label mb-0">Ventas del mes</p>
+                  <div class="metric-icon metric-icon-orange">
+                    <i class="bi bi-calendar-month"></i>
+                  </div>
+                </div>
                 <h2 id="ventasMes" class="metric-value">S/ 0.00</h2>
-                <p class="metric-sub">Mes actual</p>
+                <p class="metric-sub">Mes actual acumulado</p>
               </div>
             </div>
           </div>
 
-          <div class="col-md-6 col-xl-4">
-            <div class="card metric-card">
+          <div class="col-md-6 col-xl-4 dash-animate" style="animation-delay:160ms">
+            <div class="card metric-card h-100">
               <div class="card-body">
-                <p class="metric-label">Pedidos en curso</p>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <p class="metric-label mb-0">Pedidos en curso</p>
+                  <div class="metric-icon metric-icon-blue">
+                    <i class="bi bi-hourglass-split"></i>
+                  </div>
+                </div>
                 <h2 class="metric-value">
-                  <span id="pedidosPendientes">0</span>
-                  <span class="metric-sub-inline"> pend.</span>
-                  <span id="pedidosPreparacion" class="ms-2">0</span>
-                  <span class="metric-sub-inline"> prep.</span>
+                  <span id="pedidosPendientes">0</span><span class="metric-sub-inline"> pend.</span>
+                  <span id="pedidosPreparacion" class="ms-2">0</span><span class="metric-sub-inline"> prep.</span>
                 </h2>
                 <p class="metric-sub"><span id="pedidosListos">0</span> listos para entregar</p>
               </div>
             </div>
           </div>
+
         </div>
 
         <!-- Fila 2: Operaciones -->
         <div class="row g-3 mb-4">
-          <div class="col-md-6 col-xl-3">
-            <div class="card metric-card">
+
+          <div class="col-6 col-xl-3 dash-animate" style="animation-delay:240ms">
+            <div class="card metric-card h-100">
               <div class="card-body">
-                <p class="metric-label">Productos</p>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <p class="metric-label mb-0">Productos</p>
+                  <div class="metric-icon metric-icon-green">
+                    <i class="bi bi-box-seam"></i>
+                  </div>
+                </div>
                 <h2 id="totalProductos" class="metric-value">0</h2>
-                <p class="metric-sub"><span id="productosStockBajo" class="text-warning fw-semibold">0</span> con stock bajo</p>
+                <p class="metric-sub">
+                  <span id="productosStockBajo" class="fw-semibold dash-warn">0</span> con stock bajo
+                </p>
               </div>
             </div>
           </div>
 
-          <div class="col-md-6 col-xl-3">
-            <div class="card metric-card">
+          <div class="col-6 col-xl-3 dash-animate" style="animation-delay:320ms">
+            <div class="card metric-card h-100">
               <div class="card-body">
-                <p class="metric-label">Ingredientes</p>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <p class="metric-label mb-0">Ingredientes</p>
+                  <div class="metric-icon metric-icon-amber">
+                    <i class="bi bi-basket-fill"></i>
+                  </div>
+                </div>
                 <h2 id="totalIngredientes" class="metric-value">0</h2>
-                <p class="metric-sub"><span id="ingredientesStockBajo" class="text-warning fw-semibold">0</span> con stock bajo</p>
+                <p class="metric-sub">
+                  <span id="ingredientesStockBajo" class="fw-semibold dash-warn">0</span> con stock bajo
+                </p>
               </div>
             </div>
           </div>
 
-          <div class="col-md-6 col-xl-3">
-            <div class="card metric-card">
+          <div class="col-6 col-xl-3 dash-animate" style="animation-delay:400ms">
+            <div class="card metric-card h-100">
               <div class="card-body">
-                <p class="metric-label">Producciones activas</p>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <p class="metric-label mb-0">Producciones activas</p>
+                  <div class="metric-icon metric-icon-purple">
+                    <i class="bi bi-gear-wide-connected"></i>
+                  </div>
+                </div>
                 <h2 id="produccionesActivas" class="metric-value">0</h2>
-                <p class="metric-sub">En proceso</p>
+                <p class="metric-sub">En proceso ahora</p>
               </div>
             </div>
           </div>
 
-          <div class="col-md-6 col-xl-3">
-            <div class="card metric-card" style="cursor:pointer" onclick="location.href='pos.html'">
+          <div class="col-6 col-xl-3 dash-animate" style="animation-delay:480ms">
+            <div class="card metric-card dash-pos-card h-100" style="cursor:pointer" onclick="location.href='pos.html'">
               <div class="card-body">
-                <p class="metric-label">Punto de Venta</p>
-                <h2 class="metric-value" style="font-size:1.6rem">Abrir POS</h2>
-                <p class="metric-sub">Venta presencial →</p>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <p class="metric-label mb-0">Punto de Venta</p>
+                  <div class="metric-icon metric-icon-pos">
+                    <i class="bi bi-shop"></i>
+                  </div>
+                </div>
+                <h2 class="metric-value" style="font-size:1.55rem">Abrir POS</h2>
+                <p class="metric-sub">Venta presencial &rarr;</p>
               </div>
             </div>
           </div>
+
         </div>
 
         <!-- Pedidos recientes -->
-        <div class="card page-card">
+        <div class="card page-card dash-animate" style="animation-delay:560ms">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="fw-bold mb-0">Últimas ventas</h5>
+              <div>
+                <h5 class="fw-bold mb-0">Últimas ventas</h5>
+                <p class="text-muted small mb-0">Los pedidos más recientes del sistema</p>
+              </div>
               <a href="pedidos.html" class="btn btn-sm btn-outline-secondary">Ver todos</a>
             </div>
             <div class="table-responsive">
-              <table class="table align-middle mb-0">
+              <table class="table align-middle mb-0 dash-table">
                 <thead>
                   <tr>
                     <th>#</th>
                     <th>Cliente</th>
-                    <th>Origen</th>
+                    <th>Canal</th>
                     <th>Total</th>
                     <th>Estado</th>
                     <th>Hora</th>
                   </tr>
                 </thead>
                 <tbody id="tablaPedidosRecientes">
-                  <tr><td colspan="6" class="text-center text-muted">Cargando...</td></tr>
+                  <tr><td colspan="6" class="text-center text-muted py-4">Cargando...</td></tr>
                 </tbody>
               </table>
             </div>

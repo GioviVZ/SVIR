@@ -73,3 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initSidebar();
   verificarAccesoPagina();
 });
+
+// Efecto ripple en botones primarios
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.btn-brand, .btn-outline-brand');
+  if (!btn || btn.disabled) return;
+  const wave = document.createElement('span');
+  wave.className = 'ripple-wave';
+  const r = btn.getBoundingClientRect();
+  const size = Math.max(r.width, r.height) * 2;
+  wave.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - r.left - size / 2}px;top:${e.clientY - r.top - size / 2}px`;
+  btn.appendChild(wave);
+  wave.addEventListener('animationend', () => wave.remove());
+});

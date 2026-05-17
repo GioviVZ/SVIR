@@ -114,7 +114,7 @@ function renderProductos(lista) {
     const enCarrito = carritoPOS.find(c => c.id === p.id);
     const sinStock = (p.stock ?? 0) <= 0;
     const clases = [
-      "pos-product-card h-100",
+      "pos-product-card pos-card-enter h-100",
       sinStock ? "sin-stock" : "",
       enCarrito ? "en-carrito" : ""
     ].filter(Boolean).join(" ");
@@ -136,6 +136,11 @@ function renderProductos(lista) {
       </div>
     `;
   }).join("");
+
+  // Stagger de entrada por card
+  grid.querySelectorAll('.pos-card-enter').forEach((card, i) => {
+    card.style.animationDelay = `${Math.min(i, 10) * 35}ms`;
+  });
 }
 
 function agregarAlCarrito(productoId) {
@@ -177,6 +182,7 @@ function renderCarrito() {
     body.innerHTML = `<div class="pos-empty-cart">El carrito está vacío.<br>Haz clic en un producto para agregar.</div>`;
     totalEl.textContent = "S/ 0.00";
     btnCobrar.disabled = true;
+    btnCobrar.classList.remove('btn-cobrar-active');
     return;
   }
 
@@ -197,6 +203,7 @@ function renderCarrito() {
   const total = carritoPOS.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
   totalEl.textContent = `S/ ${total.toFixed(2)}`;
   btnCobrar.disabled = false;
+  btnCobrar.classList.add('btn-cobrar-active');
 }
 
 async function cobrar() {
@@ -204,7 +211,8 @@ async function cobrar() {
 
   const btnCobrar = document.getElementById("btnCobrar");
   btnCobrar.disabled = true;
-  btnCobrar.textContent = "Procesando...";
+  btnCobrar.classList.remove('btn-cobrar-active');
+  btnCobrar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Procesando...';
   ocultarResultado();
 
   const clienteId = document.getElementById("posClienteId").value;
@@ -231,13 +239,25 @@ async function cobrar() {
       method: "POST",
       body: JSON.stringify(payload)
     });
+
+    // Venta presencial: si todo el stock estaba disponible → marcar entregado automáticamente
+    if (response.estado === "LISTO") {
+      try {
+        await apiFetch(`/api/pedidos/${response.id}/estado`, {
+          method: "PATCH",
+          body: JSON.stringify({ estado: "ENTREGADO" })
+        });
+        response.estado = "ENTREGADO";
+      } catch (_) { /* no bloquear si falla el cambio de estado */ }
+    }
+
     mostrarResultado(response);
     mostrarBoleta(response, carritoParaBoleta, clienteParaBoleta);
     limpiarVenta();
   } catch (error) {
     mostrarError(error.message || "No se pudo procesar la venta");
     btnCobrar.disabled = false;
-    btnCobrar.textContent = "Cobrar";
+    btnCobrar.innerHTML = 'Cobrar';
   }
 }
 
@@ -248,7 +268,13 @@ function mostrarResultado(pedido) {
 
   let clase, titulo, cuerpo;
 
-  if (todosAtendidos) {
+  if (pedido.estado === "ENTREGADO") {
+    clase = "completado";
+    titulo = "✓ Venta completada y entregada";
+    cuerpo = detalles.map(d =>
+      `<div>${d.productoNombre}: ${d.cantidadAtendida} entregado(s)</div>`
+    ).join("");
+  } else if (todosAtendidos) {
     clase = "completado";
     titulo = "✓ Venta completada";
     cuerpo = detalles.map(d =>
@@ -256,7 +282,7 @@ function mostrarResultado(pedido) {
     ).join("");
   } else {
     clase = "parcial";
-    titulo = "⚠ Venta con stock parcial";
+    titulo = "⚠ Stock parcial — pendiente de producción";
     cuerpo = detalles.map(d => {
       if (d.cantidadAtendida >= d.cantidad) {
         return `<div>${d.productoNombre}: ${d.cantidadAtendida} entregado(s) ✓</div>`;
@@ -343,7 +369,7 @@ function imprimirBoleta() {
 function limpiarVenta() {
   carritoPOS = [];
   limpiarCliente();
-  document.getElementById("btnCobrar").textContent = "Cobrar";
+  document.getElementById("btnCobrar").innerHTML = "Cobrar";
   renderCarrito();
   filtrarProductos();
 }

@@ -43,4 +43,9 @@ public class ProduccionController {
                                        @Valid @RequestBody ProduccionTerminarRequest request) {
         return produccionService.terminarProduccion(id, request);
     }
+
+    @PatchMapping("/{id}/cancelar")
+    public ProduccionResponse cancelar(@PathVariable Long id) {
+        return produccionService.cancelarProduccion(id);
+    }
 }

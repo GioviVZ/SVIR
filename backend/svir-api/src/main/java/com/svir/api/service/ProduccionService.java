@@ -225,6 +225,26 @@ public class ProduccionService {
                 .toList();
     }
 
+    @Transactional
+    public ProduccionResponse cancelarProduccion(Long id) {
+        Produccion produccion = produccionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producción no encontrada"));
+
+        if (produccion.getEstado() == EstadoProduccion.TERMINADO) {
+            throw new RuntimeException("No se puede cancelar una producción ya terminada");
+        }
+        if (produccion.getEstado() == EstadoProduccion.CANCELADO) {
+            throw new RuntimeException("La producción ya está cancelada");
+        }
+
+        produccion.setEstado(EstadoProduccion.CANCELADO);
+        produccion.setFechaFin(LocalDateTime.now());
+        produccionRepository.save(produccion);
+
+        List<ProduccionDetalle> detalles = produccionDetalleRepository.findByProduccionIdOrderByIdAsc(id);
+        return toResponse(produccion, detalles);
+    }
+
     private void actualizarPedidoDespuesDeProduccion(Long pedidoId, List<ProduccionDetalle> detallesProduccion) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));

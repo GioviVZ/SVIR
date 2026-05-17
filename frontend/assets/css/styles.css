@@ -51,11 +51,28 @@ body {
   color: white;
   border-radius: 14px;
   font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.30);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
 }
 
 .btn-brand:hover {
   color: white;
-  opacity: 0.95;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.42);
+}
+
+.btn-brand:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.28);
+}
+
+.btn-brand:disabled,
+.btn-brand.disabled {
+  transform: none;
+  box-shadow: none;
+  opacity: 0.55;
 }
 
 .app-shell {
@@ -1687,3 +1704,303 @@ body {
 .user-avatar-admin  { background: #fff7ed; color: #d97706; }
 .user-avatar-ventas { background: #eff6ff; color: #2563eb; }
 .user-avatar-cocina { background: #fef2f2; color: #dc2626; }
+
+/* ── Dashboard: animaciones y componentes ─────────────────────────────────── */
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dash-animate {
+  animation: fadeSlideUp 0.45s ease both;
+}
+
+/* Hover lift en todas las metric-cards */
+.metric-card {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 28px 52px rgba(15, 23, 42, 0.11);
+}
+.metric-highlight:hover {
+  box-shadow: 0 28px 52px rgba(217, 119, 6, 0.28) !important;
+}
+
+/* Icono blob dentro de la card */
+.metric-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+.metric-icon-white  { background: rgba(255,255,255,0.22); color: #fff; }
+.metric-icon-orange { background: #fff7ed; color: #ea580c; }
+.metric-icon-blue   { background: #eff6ff; color: #2563eb; }
+.metric-icon-green  { background: #f0fdf4; color: #16a34a; }
+.metric-icon-amber  { background: #fffbeb; color: #d97706; }
+.metric-icon-purple { background: #faf5ff; color: #7c3aed; }
+.metric-icon-teal   { background: #f0fdfa; color: #0d9488; }
+
+/* Card de acceso rápido al POS */
+.dash-pos-card {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  border-color: transparent !important;
+}
+.dash-pos-card .metric-label,
+.dash-pos-card .metric-value,
+.dash-pos-card .metric-sub { color: #fff !important; }
+.dash-pos-card:hover {
+  box-shadow: 0 28px 52px rgba(30, 41, 59, 0.28) !important;
+}
+.metric-icon-pos {
+  background: rgba(255,255,255,0.12);
+  color: #fbbf24;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Saludo en topbar */
+.dash-greeting {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Valor de stock bajo (naranja solo cuando > 0) */
+.dash-warn { color: var(--muted); }
+
+/* Tabla de pedidos recientes */
+.dash-table thead th {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
+}
+.dash-table tbody tr {
+  transition: background 0.15s ease;
+}
+.dash-table tbody tr:hover {
+  background: rgba(249, 115, 22, 0.04);
+}
+.dash-table td {
+  font-size: 0.9rem;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+/* Badge de origen del pedido */
+.badge-origen {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px 9px;
+}
+
+/* Badges de estado personalizados */
+.badge-estado {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.02em;
+}
+.badge-estado-pendiente   { background: #fef9c3; color: #854d0e; }
+.badge-estado-preparacion { background: #dbeafe; color: #1d4ed8; }
+.badge-estado-listo       { background: #dcfce7; color: #15803d; }
+.badge-estado-entregado   { background: #f1f5f9; color: #475569; }
+.badge-estado-cancelado   { background: #fee2e2; color: #b91c1c; }
+.badge-estado-parcial     { background: #ffedd5; color: #c2410c; }
+
+/* ── Sistema global de animaciones y botones ──────────────────────────────── */
+
+/* Ripple wave en botones */
+@keyframes rippleWave {
+  from { transform: scale(0); opacity: 0.5; }
+  to   { transform: scale(2.8); opacity: 0; }
+}
+.ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.38);
+  pointer-events: none;
+  animation: rippleWave 0.55s ease-out forwards;
+}
+
+/* Outline brand button */
+.btn-outline-brand {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+.btn-outline-brand:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.22);
+}
+.btn-outline-brand:active { transform: scale(0.97); }
+
+/* Botón peligro (Salir) */
+.btn-outline-danger {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+.btn-outline-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.20);
+}
+.btn-outline-danger:active { transform: scale(0.97); }
+
+/* Botón secondary outline */
+.btn-outline-secondary {
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.btn-outline-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+.btn-outline-secondary:active { transform: scale(0.97); }
+
+/* Botón light (Cancelar en modales) */
+.btn-light {
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.btn-light:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+.btn-light:active { transform: scale(0.97); }
+
+/* ── Entrada de página ─────────────────────────────────────────────────────── */
+.topbar {
+  animation: fadeSlideUp 0.38s ease both;
+}
+.page-card {
+  animation: fadeSlideUp 0.42s ease both 0.07s;
+}
+
+/* ── Inputs y selects con foco de marca ───────────────────────────────────── */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+/* ── Modal ──────────────────────────────────────────────────────────────────── */
+.modal.show .modal-content {
+  animation: fadeSlideUp 0.3s ease both;
+}
+
+/* ── POS: mejoras ──────────────────────────────────────────────────────────── */
+
+/* Presión en cards de producto */
+.pos-product-card:not(.sin-stock):active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Burbuja de cantidad: pop al aparecer */
+@keyframes bubblePop {
+  0%   { transform: scale(0.3); opacity: 0; }
+  65%  { transform: scale(1.35); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.pos-qty-bubble {
+  animation: bubblePop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Botones +/- del carrito más pronunciados */
+.pos-qty-controls button {
+  border-radius: 50% !important;
+  width: 28px !important;
+  height: 28px !important;
+  transition: background 0.15s, transform 0.12s, box-shadow 0.12s;
+}
+.pos-qty-controls button:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+}
+.pos-qty-controls button:active { transform: scale(0.88); }
+
+/* Items del carrito: entran con slide */
+@keyframes cartItemIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.pos-cart-item {
+  animation: cartItemIn 0.22s ease both;
+}
+
+/* Botón cobrar pulsante cuando hay items */
+@keyframes cobrarPulse {
+  0%, 100% { box-shadow: 0 4px 14px rgba(245, 158, 11, 0.32); }
+  50%       { box-shadow: 0 4px 28px rgba(245, 158, 11, 0.65), 0 0 0 7px rgba(245, 158, 11, 0.10); }
+}
+.btn-cobrar-active {
+  animation: cobrarPulse 2.2s ease-in-out infinite;
+}
+
+/* Cards del POS: entrada escalonada al cargar */
+@keyframes posCardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.pos-card-enter {
+  animation: posCardIn 0.3s ease both;
+}
+
+/* ── Tablas globales ──────────────────────────────────────────────────────── */
+.table tbody tr {
+  transition: background 0.14s ease;
+}
+.table tbody tr:hover {
+  background: rgba(249, 115, 22, 0.035);
+}
+
+/* ── Badges globales más suaves ───────────────────────────────────────────── */
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Badge de canal de pedido ─────────────────────────────────────────────── */
+.badge-canal {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.canal-presencial { background: #fff7ed; color: #c2410c; }
+.canal-tienda     { background: #f0fdf4; color: #15803d; }
+.canal-whatsapp   { background: #dcfce7; color: #166534; }
+.canal-web        { background: #eff6ff; color: #1d4ed8; }
+
+/* ── Animación de filas en tablas con JS ──────────────────────────────────── */
+@keyframes rowFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

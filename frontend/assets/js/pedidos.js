@@ -98,21 +98,47 @@ function renderTablaPedidos(lista) {
   if (!lista || lista.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" class="text-center text-muted">No hay pedidos registrados</td>
+        <td colspan="7" class="text-center text-muted">No hay pedidos registrados</td>
       </tr>
     `;
     return;
   }
 
-  tbody.innerHTML = lista.map(p => `
-    <tr>
-      <td>${p.id ?? "-"}</td>
-      <td>${p.clienteNombre ?? p.observacion ?? "-"}</td>
-      <td>S/ ${Number(p.total ?? 0).toFixed(2)}</td>
-      <td>${renderEstado(p.estado)}</td>
-      <td>${formatearFecha(p.createdAt)}</td>
-    </tr>
-  `).join("");
+  const cancelables = ["PENDIENTE", "PARCIAL", "PREPARACION", "LISTO"];
+  const entregables = ["LISTO"];
+
+  tbody.innerHTML = lista.map(p => {
+    const puedeCancel   = cancelables.includes(p.estado);
+    const puedeEntregar = entregables.includes(p.estado);
+
+    const btnEntregar = puedeEntregar
+      ? `<button class="btn btn-sm btn-success me-1" onclick="marcarEntregado(${p.id})">
+           <i class="bi bi-bag-check me-1"></i>Entregar
+         </button>`
+      : "";
+
+    const btnCancelar = puedeCancel
+      ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelarPedido(${p.id})">
+           <i class="bi bi-x-circle me-1"></i>Cancelar
+         </button>`
+      : "";
+
+    const acciones = (btnEntregar || btnCancelar)
+      ? `<div class="d-flex gap-1 justify-content-end">${btnEntregar}${btnCancelar}</div>`
+      : `<span class="text-muted small">—</span>`;
+
+    return `
+      <tr>
+        <td class="text-muted fw-semibold">#${p.id ?? "-"}</td>
+        <td>${p.clienteNombre ?? p.observacion ?? "—"}</td>
+        <td>${renderCanal(p.tipoOrigen)}</td>
+        <td class="fw-semibold">S/ ${Number(p.total ?? 0).toFixed(2)}</td>
+        <td>${renderEstado(p.estado)}</td>
+        <td class="text-muted small">${formatearFecha(p.createdAt)}</td>
+        <td class="text-end">${acciones}</td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function filtrarPedidos() {
@@ -128,7 +154,7 @@ function filtrarPedidos() {
   if (filtrados.length === 0) {
     document.getElementById("tablaPedidos").innerHTML = `
       <tr>
-        <td colspan="5" class="text-center text-muted">No se encontraron pedidos</td>
+        <td colspan="7" class="text-center text-muted">No se encontraron pedidos</td>
       </tr>
     `;
     return;
@@ -137,20 +163,51 @@ function filtrarPedidos() {
   renderTablaPedidos(filtrados);
 }
 
+function renderCanal(origen) {
+  const mapa = {
+    PRESENCIAL: { icon: 'bi-shop',          label: 'Presencial', cls: 'canal-presencial' },
+    TIENDA:     { icon: 'bi-bag-fill',      label: 'Tienda',     cls: 'canal-tienda'    },
+    WHATSAPP:   { icon: 'bi-whatsapp',      label: 'WhatsApp',   cls: 'canal-whatsapp'  },
+    WEB:        { icon: 'bi-globe',         label: 'Web',        cls: 'canal-web'       },
+  };
+  const { icon, label, cls } = mapa[origen] ?? { icon: 'bi-question-circle', label: origen ?? '—', cls: '' };
+  return `<span class="badge-canal ${cls}"><i class="bi ${icon} me-1"></i>${label}</span>`;
+}
+
 function renderEstado(estado) {
-  if (estado === "PENDIENTE") {
-    return `<span class="badge bg-warning text-dark">Pendiente</span>`;
-  }
+  const mapa = {
+    PENDIENTE:   ['badge-estado-pendiente',   'Pendiente'],
+    PARCIAL:     ['badge-estado-parcial',     'Parcial'],
+    PREPARACION: ['badge-estado-preparacion', 'En preparación'],
+    LISTO:       ['badge-estado-listo',       'Listo'],
+    ENTREGADO:   ['badge-estado-entregado',   'Entregado'],
+    CANCELADO:   ['badge-estado-cancelado',   'Cancelado'],
+  };
+  const [cls, label] = mapa[estado] ?? ['badge-estado-entregado', estado ?? '—'];
+  return `<span class="badge-estado ${cls}">${label}</span>`;
+}
 
-  if (estado === "PREPARACION") {
-    return `<span class="badge bg-primary">Producción</span>`;
+async function marcarEntregado(id) {
+  if (!confirm(`¿Confirmar entrega del pedido #${id}?`)) return;
+  try {
+    await apiFetch(`/api/pedidos/${id}/estado`, {
+      method: "PATCH",
+      body: JSON.stringify({ estado: "ENTREGADO" })
+    });
+    await cargarPedidos();
+  } catch (error) {
+    alert(error.message || "No se pudo marcar como entregado");
   }
+}
 
-  if (estado === "LISTO") {
-    return `<span class="badge bg-success">Listo</span>`;
+async function cancelarPedido(id) {
+  if (!confirm(`¿Cancelar el pedido #${id}? Esta acción no se puede deshacer.`)) return;
+  try {
+    await apiFetch(`/api/pedidos/${id}/cancelar`, { method: "PATCH" });
+    await cargarPedidos();
+  } catch (error) {
+    alert(error.message || "No se pudo cancelar el pedido");
   }
-
-  return `<span class="badge bg-secondary">${estado ?? "Sin estado"}</span>`;
 }
 
 function formatearFecha(fecha) {

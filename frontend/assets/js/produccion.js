@@ -54,7 +54,7 @@ function renderTablaProducciones(lista) {
   if (!lista || lista.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center text-muted">No hay producciones registradas</td>
+        <td colspan="7" class="text-center text-muted">No hay producciones registradas</td>
       </tr>
     `;
     return;
@@ -62,9 +62,20 @@ function renderTablaProducciones(lista) {
 
   tbody.innerHTML = lista.map(p => {
     const detalle = p.detalles && p.detalles.length > 0 ? p.detalles[0] : null;
-    const accion = p.estado === "EN_PROCESO"
-      ? `<button class="btn btn-sm btn-success" onclick='abrirTerminarModal(${JSON.stringify(p)})'>Terminar</button>`
-      : `<span class="text-muted small">-</span>`;
+    let accion;
+    if (p.estado === "EN_PROCESO") {
+      accion = `
+        <div class="d-flex gap-1 justify-content-end">
+          <button class="btn btn-sm btn-success" onclick='abrirTerminarModal(${JSON.stringify(p)})'>
+            <i class="bi bi-check-lg me-1"></i>Terminar
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="cancelarProduccion(${p.id})">
+            <i class="bi bi-x-circle me-1"></i>Cancelar
+          </button>
+        </div>`;
+    } else {
+      accion = `<span class="text-muted small">—</span>`;
+    }
 
     return `
       <tr>
@@ -97,7 +108,7 @@ function filtrarProducciones() {
   if (filtrados.length === 0) {
     document.getElementById("tablaProducciones").innerHTML = `
       <tr>
-        <td colspan="6" class="text-center text-muted">No se encontraron producciones</td>
+        <td colspan="7" class="text-center text-muted">No se encontraron producciones</td>
       </tr>
     `;
     return;
@@ -207,17 +218,22 @@ async function confirmarTerminar() {
 }
 
 function renderEstadoProduccion(estado) {
-  if (estado === "EN_PROCESO") {
-    return `<span class="badge bg-primary">En proceso</span>`;
-  }
+  const mapa = {
+    PENDIENTE:   ['badge-estado-pendiente',   'Pendiente'],
+    EN_PROCESO:  ['badge-estado-preparacion', 'En proceso'],
+    TERMINADO:   ['badge-estado-listo',       'Terminado'],
+    CANCELADO:   ['badge-estado-cancelado',   'Cancelado'],
+  };
+  const [cls, label] = mapa[estado] ?? ['badge-estado-entregado', estado ?? '—'];
+  return `<span class="badge-estado ${cls}">${label}</span>`;
+}
 
-  if (estado === "TERMINADO") {
-    return `<span class="badge bg-success">Terminado</span>`;
+async function cancelarProduccion(id) {
+  if (!confirm(`¿Cancelar la producción #${id}? Esta acción no se puede deshacer.`)) return;
+  try {
+    await apiFetch(`/api/producciones/${id}/cancelar`, { method: "PATCH" });
+    await cargarProducciones();
+  } catch (error) {
+    alert(error.message || "No se pudo cancelar la producción");
   }
-
-  if (estado === "CANCELADO") {
-    return `<span class="badge bg-danger">Cancelado</span>`;
-  }
-
-  return `<span class="badge bg-secondary">${estado ?? "Sin estado"}</span>`;
 }
