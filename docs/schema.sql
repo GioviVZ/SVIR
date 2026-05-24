@@ -92,6 +92,8 @@ CREATE TABLE `pedidos` (
   `fecha`       TIMESTAMP      NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`  TIMESTAMP      NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
+  KEY `fk_pedidos_cliente`  (`cliente_id`),
+  KEY `fk_pedidos_usuario`  (`usuario_id`),
   CONSTRAINT `fk_pedidos_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

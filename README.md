@@ -12,9 +12,9 @@ Sistema de gestión integral para la pastelería **Dulce Momento**. Cubre el cic
 | **Productos** | Catálogo con precio, stock y foto; alerta de stock mínimo |
 | **Ingredientes** | Stock en unidad de medida; alerta de stock mínimo |
 | **Recetas** | Relación producto → ingredientes con cantidades |
-| **Pedidos** | Gestión de pedidos (PRESENCIAL, TIENDA, WHATSAPP, WEB) con estados |
-| **Producción** | Órdenes de cocina por pedido o para stock; descuento automático de ingredientes |
-| **Punto de Venta** | POS interno para cobros presenciales |
+| **Pedidos** | Gestión de pedidos multicanal (PRESENCIAL, TIENDA, WHATSAPP, WEB); cancelar y marcar como entregado |
+| **Producción** | Órdenes de cocina por pedido o para stock; descuento automático de ingredientes; cancelar orden |
+| **Punto de Venta** | POS interno para cobros presenciales; marca el pedido como ENTREGADO automáticamente |
 | **Movimientos** | Historial de entradas/salidas de ingredientes y productos |
 | **Clientes** | Registro con DNI/RUC, teléfono y dirección |
 | **Usuarios** | Alta/baja de personal con roles (Admin, Ventas, Cocina) |
@@ -157,9 +157,11 @@ python3 -m http.server 5500
 | GET/POST/PUT | `/api/ingredientes` | CRUD de ingredientes |
 | GET/POST/PUT | `/api/recetas/{productoId}` | Receta por producto |
 | GET/POST | `/api/pedidos` | Listar / crear pedidos |
-| POST | `/api/pedidos/{id}/estado` | Cambiar estado |
+| PATCH | `/api/pedidos/{id}/estado` | Cambiar estado (ej. → ENTREGADO) |
+| PATCH | `/api/pedidos/{id}/cancelar` | Cancelar pedido (restaura stock) |
 | GET/POST | `/api/producciones` | Órdenes de producción |
-| POST | `/api/producciones/{id}/terminar` | Finalizar producción |
+| PATCH | `/api/producciones/{id}/terminar` | Finalizar producción |
+| PATCH | `/api/producciones/{id}/cancelar` | Cancelar producción |
 | GET | `/api/movimientos` | Historial de movimientos |
 | GET/POST/PUT | `/api/clientes` | CRUD de clientes |
 | GET/POST/PUT | `/api/usuarios` | CRUD de usuarios |
