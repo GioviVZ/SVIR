@@ -63,7 +63,7 @@
   <section class="hero-store hero-store-premium">
     <div class="container">
       <div class="row align-items-center g-5">
-        <div class="col-lg-6">
+        <div class="col-lg-6 hero-content-enter">
           <span class="store-pill">
             <i class="bi bi-star-fill me-1"></i> Repostería artesanal · Lima
           </span>
@@ -100,7 +100,7 @@
           </div>
         </div>
 
-        <div class="col-lg-6 d-flex align-items-center justify-content-center">
+        <div class="col-lg-6 d-flex align-items-center justify-content-center hero-visual-enter">
           <div class="hero-collage">
             <img src="assets/img/hero-torta-chocolate.jpg"
                  class="hero-collage-main" alt="Torta artesanal de chocolate">
@@ -131,7 +131,7 @@
       </div>
 
       <div class="row g-5 pt-3">
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-3 scroll-reveal">
           <div class="step-card">
             <div class="step-number">1</div>
             <div class="category-icon mx-auto">
@@ -141,7 +141,7 @@
             <p class="text-muted mb-0 small">Crea tu cuenta con nombre y DNI en segundos.</p>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-3 scroll-reveal sr-delay-1">
           <div class="step-card">
             <div class="step-number">2</div>
             <div class="category-icon mx-auto">
@@ -151,7 +151,7 @@
             <p class="text-muted mb-0 small">Navega el catálogo y elige tus postres favoritos.</p>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-3 scroll-reveal sr-delay-2">
           <div class="step-card">
             <div class="step-number">3</div>
             <div class="category-icon mx-auto">
@@ -161,7 +161,7 @@
             <p class="text-muted mb-0 small">Revisa tu carrito y confirma tu pedido.</p>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-3 scroll-reveal sr-delay-3">
           <div class="step-card">
             <div class="step-number">4</div>
             <div class="category-icon mx-auto">
@@ -208,25 +208,43 @@
       </div>
 
       <div class="row g-4">
-        <div class="col-md-4">
+        <div class="col-md-4 scroll-reveal">
           <div class="testimonial-card">
-            <div class="testimonial-stars">★★★★★</div>
-            <p class="text-muted">"La presentación fue hermosa y el sabor increíble. Volvería a pedir sin dudar."</p>
-            <strong>María R.</strong>
+            <span class="testimonial-quote">&ldquo;</span>
+            <p class="text-muted mb-0">La presentación fue hermosa y el sabor increíble. Volvería a pedir sin dudar.</p>
+            <div class="testimonial-footer">
+              <div class="testimonial-avatar t-av-1">M</div>
+              <div>
+                <strong class="d-block lh-1 mb-1">María R.</strong>
+                <span class="testimonial-stars-sm">★★★★★</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 scroll-reveal sr-delay-1">
           <div class="testimonial-card">
-            <div class="testimonial-stars">★★★★★</div>
-            <p class="text-muted">"Muy fácil hacer el pedido y los postres llegaron en excelente estado."</p>
-            <strong>Carlos T.</strong>
+            <span class="testimonial-quote">&ldquo;</span>
+            <p class="text-muted mb-0">Muy fácil hacer el pedido y los postres llegaron en excelente estado.</p>
+            <div class="testimonial-footer">
+              <div class="testimonial-avatar t-av-2">C</div>
+              <div>
+                <strong class="d-block lh-1 mb-1">Carlos T.</strong>
+                <span class="testimonial-stars-sm">★★★★★</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 scroll-reveal sr-delay-2">
           <div class="testimonial-card">
-            <div class="testimonial-stars">★★★★★</div>
-            <p class="text-muted">"El diseño se ve bonito y comprar es súper rápido. Me encantó la experiencia."</p>
-            <strong>Andrea P.</strong>
+            <span class="testimonial-quote">&ldquo;</span>
+            <p class="text-muted mb-0">El diseño se ve bonito y comprar es súper rápido. Me encantó la experiencia.</p>
+            <div class="testimonial-footer">
+              <div class="testimonial-avatar t-av-3">A</div>
+              <div>
+                <strong class="d-block lh-1 mb-1">Andrea P.</strong>
+                <span class="testimonial-stars-sm">★★★★★</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -449,6 +467,17 @@
       // Abrir modal si viene desde carrito sin sesión
       const params = new URLSearchParams(window.location.search);
       if (params.get("auth")) mostrarModalAuth(params.get("auth") || "registro");
+
+      // Scroll reveal con IntersectionObserver
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.10 });
+      document.querySelectorAll(".scroll-reveal").forEach(el => revealObserver.observe(el));
     });
   </script>
 </body>

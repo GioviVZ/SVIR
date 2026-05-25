@@ -260,7 +260,7 @@ async function cargarDestacadosHome() {
       return;
     }
 
-    container.innerHTML = activos.slice(0, 8).map(renderProductoCard).join("");
+    container.innerHTML = activos.slice(0, 8).map((p, i) => renderProductoCard(p, i)).join("");
   } catch {
     container.innerHTML = `<div class="col-12 text-center text-muted py-4">No se pudieron cargar los productos.</div>`;
   }
@@ -303,16 +303,22 @@ async function cargarCatalogo() {
 function renderCatalogo(lista) {
   const container = document.getElementById("catalogoProductos");
   if (!container) return;
+
+  const countEl = document.getElementById("catalogResultsText");
+
   if (!lista || lista.length === 0) {
     container.innerHTML = `<div class="col-12 text-center text-muted py-5">No se encontraron productos.</div>`;
+    if (countEl) countEl.textContent = "0";
     return;
   }
-  container.innerHTML = lista.map(renderProductoCard).join("");
+
+  if (countEl) countEl.textContent = lista.length;
+  container.innerHTML = lista.map((p, i) => renderProductoCard(p, i)).join("");
 }
 
 // ── Card de producto (home + catálogo) ────────────────────────────
 
-function renderProductoCard(producto) {
+function renderProductoCard(producto, idx = 0) {
   _productosMap[producto.id] = producto;
 
   const nombre = producto.nombre ?? "Producto";
@@ -321,6 +327,7 @@ function renderProductoCard(producto) {
   const stock = Number(producto.stock ?? 0);
   const inicial = nombre.charAt(0).toUpperCase();
   const sinStock = stock <= 0;
+  const delay = Math.min(idx, 11) * 55;
 
   const badgeStock = sinStock
     ? `<span class="product-badge-stock low-stock">Sin stock</span>`
@@ -355,7 +362,7 @@ function renderProductoCard(producto) {
     '</div>' + btnAdd;
 
   return `
-    <div class="col-md-6 col-lg-4 col-xl-3">
+    <div class="col-md-6 col-lg-4 col-xl-3 store-card-animate" style="animation-delay:${delay}ms">
       <div class="store-product-card premium-product-card h-100">
         <div class="store-product-image-wrap position-relative">
           ${imagenHTML}

@@ -60,25 +60,32 @@
   </nav>
 
   <!-- ── HERO DEL CATÁLOGO ──────────────────────────────────────── -->
-  <section class="py-5 catalog-hero-section">
+  <section class="catalog-hero-section">
     <div class="container">
-      <div class="catalog-hero-box text-center">
+      <div class="catalog-hero-box text-center hero-content-enter">
+        <span class="catalog-hero-deco">🍰 🧁 🍩</span>
         <span class="store-pill">Catálogo artesanal</span>
         <h1 class="fw-bold mt-3">Encuentra tu postre ideal</h1>
         <p class="text-muted mb-4">Busca, compara y agrega al carrito de forma rápida y visual.</p>
 
         <div class="row justify-content-center">
-          <div class="col-md-8 col-lg-5">
+          <div class="col-md-8 col-lg-6">
             <div class="catalog-search-wrap">
               <i class="bi bi-search"></i>
               <input type="text" id="buscarCatalogo" class="form-control form-control-lg"
-                placeholder="Buscar producto...">
+                placeholder="¿Qué postre buscas hoy?">
             </div>
           </div>
         </div>
+
+        <div class="catalog-results-bar justify-content-center">
+          <i class="bi bi-grid3x3-gap"></i>
+          <span id="catalogResultsText" class="catalog-count-pill">Cargando...</span>
+          <span>productos disponibles</span>
+        </div>
       </div>
 
-      <div class="row g-4 mt-4" id="catalogoProductos">
+      <div class="row g-4 mt-3" id="catalogoProductos">
         <div class="col-12 text-center py-5">
           <div class="spinner-border text-warning" role="status"></div>
           <p class="mt-3 text-muted">Cargando catálogo...</p>
@@ -260,6 +267,16 @@
       cargarCatalogo();
       actualizarNavCliente();
       actualizarContadorCarrito();
+
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.10 });
+      document.querySelectorAll(".scroll-reveal").forEach(el => revealObserver.observe(el));
     });
   </script>
 </body>
