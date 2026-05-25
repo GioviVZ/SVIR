@@ -24,16 +24,17 @@ CREATE TABLE `usuarios` (
 
 -- ─── CLIENTES ────────────────────────────────────────────────────────────────
 CREATE TABLE `clientes` (
-  `id`         INT          NOT NULL AUTO_INCREMENT,
-  `nombre`     VARCHAR(100) NOT NULL,
-  `dni`        VARCHAR(8)   DEFAULT NULL,
-  `ruc`        VARCHAR(11)  DEFAULT NULL,
-  `telefono`   VARCHAR(20)  DEFAULT NULL,
-  `direccion`  VARCHAR(255) DEFAULT NULL,
-  `email`      VARCHAR(150) DEFAULT NULL,
-  `activo`     TINYINT(1)   NOT NULL DEFAULT 1,
-  `created_at` TIMESTAMP    NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP    NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id`            INT          NOT NULL AUTO_INCREMENT,
+  `nombre`        VARCHAR(100) NOT NULL,
+  `dni`           VARCHAR(8)   DEFAULT NULL,
+  `ruc`           VARCHAR(11)  DEFAULT NULL,
+  `telefono`      VARCHAR(20)  DEFAULT NULL,
+  `direccion`     VARCHAR(255) DEFAULT NULL,
+  `email`         VARCHAR(150) DEFAULT NULL,
+  `password_hash` VARCHAR(100) DEFAULT NULL,  -- contraseña para tienda web (BCrypt); NULL si no tiene cuenta
+  `activo`        TINYINT(1)   NOT NULL DEFAULT 1,
+  `created_at`    TIMESTAMP    NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`    TIMESTAMP    NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
