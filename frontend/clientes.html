@@ -193,6 +193,43 @@
   </div>
 </div>
 
+<!-- ── MODAL RESTABLECER CONTRASEÑA ──────────────────────── -->
+<div class="modal fade" id="resetClaveModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4">
+      <div class="modal-header">
+        <h5 class="modal-title">Restablecer contraseña</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="resetClaveForm">
+        <div class="modal-body">
+          <input type="hidden" id="resetClaveClienteId">
+          <p class="text-muted small mb-3">
+            Cliente: <strong id="resetClaveClienteNombre"></strong>
+          </p>
+          <div class="mb-3">
+            <label class="form-label">Nueva contraseña <span class="text-danger">*</span></label>
+            <input type="password" id="resetClavePassword" class="form-control"
+              placeholder="Mín. 6 caracteres" maxlength="100">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Confirmar contraseña <span class="text-danger">*</span></label>
+            <input type="password" id="resetClaveConfirm" class="form-control"
+              placeholder="Repite la contraseña" maxlength="100">
+          </div>
+          <div id="resetClaveMensaje" class="small mt-2"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" id="btnConfirmarResetClave" class="btn btn-warning" onclick="confirmarResetClave()">
+            <i class="bi bi-key me-1"></i>Restablecer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/api.js"></script>
 <script src="assets/js/auth.js"></script>

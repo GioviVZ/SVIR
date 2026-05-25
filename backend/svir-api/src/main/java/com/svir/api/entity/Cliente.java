@@ -44,4 +44,7 @@ public class Cliente {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "password_hash", length = 100)
+    private String passwordHash;
 }

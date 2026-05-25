@@ -188,11 +188,15 @@ async function registrarCliente() {
   const telefono = (document.getElementById("regTelefono")?.value || "").trim();
   const email = (document.getElementById("regEmail")?.value || "").trim();
   const direccion = (document.getElementById("regDireccion")?.value || "").trim();
+  const password = (document.getElementById("regPassword")?.value || "").trim();
+  const passwordConfirm = (document.getElementById("regPasswordConfirm")?.value || "").trim();
 
   if (nombre.length < 2) { mostrarAuthMensaje("El nombre debe tener al menos 2 caracteres.", "error"); return; }
   if (!/^\d{8}$/.test(dni)) { mostrarAuthMensaje("El DNI debe tener exactamente 8 dígitos numéricos.", "error"); return; }
   if (ruc && !/^\d{11}$/.test(ruc)) { mostrarAuthMensaje("El RUC debe tener exactamente 11 dígitos.", "error"); return; }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { mostrarAuthMensaje("Ingresa un email válido.", "error"); return; }
+  if (password.length < 6) { mostrarAuthMensaje("La contraseña debe tener al menos 6 caracteres.", "error"); return; }
+  if (password !== passwordConfirm) { mostrarAuthMensaje("Las contraseñas no coinciden.", "error"); return; }
 
   const btn = document.getElementById("btnRegistrar");
   if (btn) { btn.disabled = true; btn.textContent = "Registrando..."; }
@@ -200,7 +204,7 @@ async function registrarCliente() {
   try {
     const cliente = await apiFetch("/api/clientes/registro", {
       method: "POST",
-      body: JSON.stringify({ nombre, dni, ruc: ruc || null, telefono: telefono || null, email: email || null, direccion: direccion || null })
+      body: JSON.stringify({ nombre, dni, ruc: ruc || null, telefono: telefono || null, email: email || null, direccion: direccion || null, password })
     });
 
     guardarClienteWeb({ nombre: cliente.nombre, dni: cliente.dni, telefono: cliente.telefono, clienteId: cliente.id, esInvitado: false });
@@ -216,24 +220,29 @@ async function registrarCliente() {
   }
 }
 
-// Modo 3: Login — busca cuenta por DNI en el backend
+// Modo 3: Login — DNI + contraseña
 async function loginCliente() {
   const dni = (document.getElementById("loginDni")?.value || "").trim();
+  const password = (document.getElementById("loginPassword")?.value || "").trim();
 
   if (!/^\d{8}$/.test(dni)) { mostrarAuthMensaje("Ingresa un DNI válido de 8 dígitos.", "error"); return; }
+  if (password.length < 6) { mostrarAuthMensaje("Ingresa tu contraseña (mínimo 6 caracteres).", "error"); return; }
 
   const btn = document.getElementById("btnLogin");
-  if (btn) { btn.disabled = true; btn.textContent = "Buscando..."; }
+  if (btn) { btn.disabled = true; btn.textContent = "Ingresando..."; }
 
   try {
-    const cliente = await apiFetch(`/api/clientes/buscar?dni=${dni}`);
+    const cliente = await apiFetch("/api/clientes/login", {
+      method: "POST",
+      body: JSON.stringify({ dni, password })
+    });
     guardarClienteWeb({ nombre: cliente.nombre, dni: cliente.dni, telefono: cliente.telefono, clienteId: cliente.id, esInvitado: false });
 
     if (_authModal) _authModal.hide();
     actualizarNavCliente();
     actualizarContadorCarrito();
-  } catch {
-    mostrarAuthMensaje("No encontramos una cuenta con ese DNI. ¿Quieres registrarte?", "error");
+  } catch (error) {
+    mostrarAuthMensaje(error.message || "DNI o contraseña incorrectos.", "error");
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = "Ingresar"; }
   }

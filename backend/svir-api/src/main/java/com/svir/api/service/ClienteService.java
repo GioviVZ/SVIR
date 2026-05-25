@@ -1,11 +1,16 @@
 package com.svir.api.service;
 
+import com.svir.api.dto.cliente.ClienteLoginRequest;
 import com.svir.api.dto.cliente.ClienteRegistroRequest;
 import com.svir.api.dto.cliente.ClienteRequest;
+import com.svir.api.dto.cliente.ClienteResetPasswordRequest;
 import com.svir.api.dto.cliente.ClienteResponse;
 import com.svir.api.entity.Cliente;
+import com.svir.api.exception.BusinessException;
+import com.svir.api.exception.ResourceNotFoundException;
 import com.svir.api.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,6 +21,7 @@ import java.util.List;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<ClienteResponse> listar() {
         return clienteRepository.findAll().stream()
@@ -41,7 +47,7 @@ public class ClienteService {
 
     public ClienteResponse actualizar(Long id, ClienteRequest request) {
         Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
 
         cliente.setNombre(request.getNombre());
         cliente.setDni(request.getDni());
@@ -57,7 +63,7 @@ public class ClienteService {
 
     public ClienteResponse registrarPublico(ClienteRegistroRequest request) {
         if (clienteRepository.existsByDni(request.getDni())) {
-            throw new RuntimeException("Ya existe una cuenta con ese DNI. Ingresa con tu DNI.");
+            throw new BusinessException("Ya existe una cuenta con ese DNI. Ingresa con tu DNI y contraseña.");
         }
         Cliente cliente = Cliente.builder()
                 .nombre(request.getNombre())
@@ -66,6 +72,7 @@ public class ClienteService {
                 .telefono(request.getTelefono())
                 .direccion(request.getDireccion())
                 .email(request.getEmail())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .activo(true)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -73,15 +80,32 @@ public class ClienteService {
         return toResponse(clienteRepository.save(cliente));
     }
 
+    public ClienteResponse loginCliente(ClienteLoginRequest request) {
+        Cliente cliente = clienteRepository.findByDni(request.getDni())
+                .orElseThrow(() -> new BusinessException("No encontramos una cuenta con ese DNI."));
+        if (cliente.getPasswordHash() == null || !passwordEncoder.matches(request.getPassword(), cliente.getPasswordHash())) {
+            throw new BusinessException("DNI o contraseña incorrectos.");
+        }
+        return toResponse(cliente);
+    }
+
+    public void resetearClave(Long id, ClienteResetPasswordRequest request) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+        cliente.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        cliente.setUpdatedAt(LocalDateTime.now());
+        clienteRepository.save(cliente);
+    }
+
     public ClienteResponse buscarPorDni(String dni) {
         return clienteRepository.findByDni(dni)
                 .map(this::toResponse)
-                .orElseThrow(() -> new RuntimeException("No encontramos una cuenta con ese DNI."));
+                .orElseThrow(() -> new BusinessException("No encontramos una cuenta con ese DNI."));
     }
 
     public void cambiarActivo(Long id, Boolean activo) {
         Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
         cliente.setActivo(activo);
         cliente.setUpdatedAt(LocalDateTime.now());
         clienteRepository.save(cliente);

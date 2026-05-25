@@ -1,7 +1,9 @@
 package com.svir.api.controller;
 
+import com.svir.api.dto.cliente.ClienteLoginRequest;
 import com.svir.api.dto.cliente.ClienteRegistroRequest;
 import com.svir.api.dto.cliente.ClienteRequest;
+import com.svir.api.dto.cliente.ClienteResetPasswordRequest;
 import com.svir.api.dto.cliente.ClienteResponse;
 import com.svir.api.service.ClienteService;
 import jakarta.validation.Valid;
@@ -28,7 +30,13 @@ public class ClienteController {
         return clienteService.registrarPublico(request);
     }
 
-    // Endpoint público — login por DNI desde la tienda web
+    // Endpoint público — login con DNI + contraseña desde la tienda web
+    @PostMapping("/login")
+    public ClienteResponse login(@Valid @RequestBody ClienteLoginRequest request) {
+        return clienteService.loginCliente(request);
+    }
+
+    // Endpoint público — login por DNI desde la tienda web (legacy, solo interno)
     @GetMapping("/buscar")
     public ClienteResponse buscarPorDni(@RequestParam String dni) {
         return clienteService.buscarPorDni(dni);
@@ -49,5 +57,11 @@ public class ClienteController {
     public void cambiarActivo(@PathVariable Long id,
                               @RequestParam Boolean activo) {
         clienteService.cambiarActivo(id, activo);
+    }
+
+    @PatchMapping("/{id}/resetear-clave")
+    public void resetearClave(@PathVariable Long id,
+                              @Valid @RequestBody ClienteResetPasswordRequest request) {
+        clienteService.resetearClave(id, request);
     }
 }

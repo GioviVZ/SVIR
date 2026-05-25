@@ -31,4 +31,8 @@ public class ClienteRegistroRequest {
     @Email(message = "Formato de email inválido")
     @Size(max = 150)
     private String email;
+
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 6, max = 100, message = "La contraseña debe tener al menos 6 caracteres")
+    private String password;
 }

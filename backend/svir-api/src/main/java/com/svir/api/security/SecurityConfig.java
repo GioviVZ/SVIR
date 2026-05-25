@@ -59,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
                         // Registro e inicio de sesión público para clientes de la tienda web
                         .requestMatchers(HttpMethod.POST, "/api/clientes/registro").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/clientes/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/clientes/buscar").permitAll()
                         .requestMatchers("/api/clientes/**").hasAnyRole("ADMIN", "VENTAS")
 

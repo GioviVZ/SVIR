@@ -39,6 +39,7 @@ function renderTablaClientes(lista) {
       '<td>' + estadoBadge + '</td>' +
       '<td class="text-end">' +
         '<button class="btn btn-sm btn-outline-secondary me-1" onclick="editarCliente(' + c.id + ')">Editar</button>' +
+        '<button class="btn btn-sm btn-outline-warning me-1" onclick="abrirModalResetClave(' + c.id + ', \'' + (c.nombre ?? '') + '\')" title="Restablecer contraseña"><i class="bi bi-key"></i></button>' +
         btnEstado +
       '</td>' +
       '</tr>';
@@ -73,6 +74,54 @@ async function toggleActivo(id, activo) {
     await cargarClientes();
   } catch (e) {
     alert(e.message);
+  }
+}
+
+function abrirModalResetClave(id, nombre) {
+  document.getElementById('resetClaveClienteId').value = id;
+  document.getElementById('resetClaveClienteNombre').textContent = nombre;
+  document.getElementById('resetClaveForm').reset();
+  document.getElementById('resetClaveMensaje').textContent = '';
+  new bootstrap.Modal(document.getElementById('resetClaveModal')).show();
+}
+
+async function confirmarResetClave() {
+  const id = document.getElementById('resetClaveClienteId').value;
+  const password = document.getElementById('resetClavePassword').value.trim();
+  const confirm = document.getElementById('resetClaveConfirm').value.trim();
+  const msgEl = document.getElementById('resetClaveMensaje');
+
+  msgEl.className = 'small mt-2';
+  msgEl.textContent = '';
+
+  if (password.length < 6) {
+    msgEl.className = 'small mt-2 text-danger';
+    msgEl.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    return;
+  }
+  if (password !== confirm) {
+    msgEl.className = 'small mt-2 text-danger';
+    msgEl.textContent = 'Las contraseñas no coinciden.';
+    return;
+  }
+
+  const btn = document.getElementById('btnConfirmarResetClave');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    await apiFetch('/api/clientes/' + id + '/resetear-clave', {
+      method: 'PATCH',
+      body: JSON.stringify({ password })
+    });
+    bootstrap.Modal.getInstance(document.getElementById('resetClaveModal')).hide();
+    alert('Contraseña restablecida exitosamente.');
+  } catch (e) {
+    msgEl.className = 'small mt-2 text-danger';
+    msgEl.textContent = e.message || 'Error al restablecer la contraseña.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Restablecer';
   }
 }
 
