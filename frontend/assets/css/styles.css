@@ -990,6 +990,25 @@ body {
   color: var(--text);
 }
 
+.pos-doc-indicador {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px dashed var(--border);
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+  user-select: none;
+}
+.pos-doc-indicador:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
 .pos-result-box {
   border-radius: 16px;
   padding: 16px;
@@ -1121,6 +1140,19 @@ body {
   margin: 0;
   color: #555;
   font-size: 0.78rem;
+}
+
+.boleta-tipo-doc {
+  margin: 6px 0 0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  color: #111;
+  text-transform: uppercase;
+  border: 1px solid #111;
+  display: inline-block;
+  padding: 1px 8px;
+  font-family: 'Courier New', monospace;
 }
 
 .boleta-divider {

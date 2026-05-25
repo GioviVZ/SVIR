@@ -1,21 +1,20 @@
 requireAuth();
 
 let productosData = [];
-let carritoPOS = [];
-let clientesData = [];
-let clienteSeleccionado = null;
+let carritoPOS    = [];
+let clientesData  = [];
+
+// Estado del comprobante seleccionado
+let docTipo      = "simple";   // "simple" | "boleta" | "factura"
+let docClienteId = null;       // id del cliente encontrado en BD (puede ser null)
+let docDatos     = {};         // { nombre, dni, razonSocial, ruc, direccion }
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("buscarPOS").addEventListener("input", filtrarProductos);
-  document.getElementById("posClienteBuscar").addEventListener("input", filtrarClientes);
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".pos-cliente-wrap")) {
-      document.getElementById("posClienteSugerencias").classList.add("d-none");
-    }
-  });
-
   await Promise.all([cargarProductos(), cargarClientes()]);
 });
+
+// ── Carga inicial ──────────────────────────────────────────────────────────
 
 async function cargarProductos() {
   const grid = document.getElementById("posProductosGrid");
@@ -24,7 +23,7 @@ async function cargarProductos() {
     const todos = await apiFetch("/api/productos");
     productosData = (todos || []).filter(p => p.activo !== false);
     renderProductos(productosData);
-  } catch (error) {
+  } catch {
     grid.innerHTML = `<div class="col-12 text-center text-danger py-4">Error al cargar productos</div>`;
   }
 }
@@ -33,74 +32,19 @@ async function cargarClientes() {
   try {
     const todos = await apiFetch("/api/clientes");
     clientesData = (todos || []).filter(c => c.activo !== false);
-  } catch (_) {
+  } catch {
     clientesData = [];
   }
 }
 
+// ── Productos ──────────────────────────────────────────────────────────────
+
 function filtrarProductos() {
   const texto = document.getElementById("buscarPOS").value.trim().toLowerCase();
-  const filtrados = texto
+  renderProductos(texto
     ? productosData.filter(p => (p.nombre ?? "").toLowerCase().includes(texto))
-    : productosData;
-  renderProductos(filtrados);
-}
-
-function filtrarClientes() {
-  const texto = document.getElementById("posClienteBuscar").value.trim().toLowerCase();
-  const sugerenciasEl = document.getElementById("posClienteSugerencias");
-
-  clienteSeleccionado = null;
-  document.getElementById("posClienteId").value = "";
-
-  if (texto.length < 2) {
-    sugerenciasEl.classList.add("d-none");
-    return;
-  }
-
-  const filtrados = clientesData.filter(c =>
-    c.nombre.toLowerCase().includes(texto) ||
-    (c.dni ?? "").includes(texto) ||
-    (c.ruc ?? "").includes(texto)
-  ).slice(0, 8);
-
-  if (!filtrados.length) {
-    sugerenciasEl.innerHTML = `<div class="pos-sugerencia-item text-muted">Sin resultados</div>`;
-    sugerenciasEl.classList.remove("d-none");
-    return;
-  }
-
-  sugerenciasEl.innerHTML = filtrados.map(c => `
-    <div class="pos-sugerencia-item" onclick="seleccionarCliente(${c.id})">
-      <strong>${c.nombre}</strong>
-      ${c.dni ? `<span class="text-muted ms-2" style="font-size:0.8rem">DNI: ${c.dni}</span>` : ""}
-      ${c.telefono ? `<span class="text-muted ms-2" style="font-size:0.8rem">${c.telefono}</span>` : ""}
-    </div>
-  `).join("");
-  sugerenciasEl.classList.remove("d-none");
-}
-
-function seleccionarCliente(id) {
-  const c = clientesData.find(x => x.id === id);
-  if (!c) return;
-
-  clienteSeleccionado = c;
-  document.getElementById("posClienteId").value = c.id;
-  document.getElementById("posClienteBuscar").value = "";
-  document.getElementById("posClienteSugerencias").classList.add("d-none");
-
-  const tag = document.getElementById("posClienteSeleccionado");
-  document.getElementById("posClienteNombre").textContent =
-    `${c.nombre}${c.dni ? " — DNI " + c.dni : ""}`;
-  tag.classList.remove("d-none");
-}
-
-function limpiarCliente() {
-  clienteSeleccionado = null;
-  document.getElementById("posClienteId").value = "";
-  document.getElementById("posClienteBuscar").value = "";
-  document.getElementById("posClienteSeleccionado").classList.add("d-none");
-  document.getElementById("posClienteSugerencias").classList.add("d-none");
+    : productosData
+  );
 }
 
 function renderProductos(lista) {
@@ -112,11 +56,11 @@ function renderProductos(lista) {
 
   grid.innerHTML = lista.map(p => {
     const enCarrito = carritoPOS.find(c => c.id === p.id);
-    const sinStock = (p.stock ?? 0) <= 0;
+    const sinStock  = (p.stock ?? 0) <= 0;
     const clases = [
       "pos-product-card pos-card-enter h-100",
-      sinStock ? "sin-stock" : "",
-      enCarrito ? "en-carrito" : ""
+      sinStock   ? "sin-stock"  : "",
+      enCarrito  ? "en-carrito" : ""
     ].filter(Boolean).join(" ");
 
     return `
@@ -137,11 +81,12 @@ function renderProductos(lista) {
     `;
   }).join("");
 
-  // Stagger de entrada por card
-  grid.querySelectorAll('.pos-card-enter').forEach((card, i) => {
+  grid.querySelectorAll(".pos-card-enter").forEach((card, i) => {
     card.style.animationDelay = `${Math.min(i, 10) * 35}ms`;
   });
 }
+
+// ── Carrito ────────────────────────────────────────────────────────────────
 
 function agregarAlCarrito(productoId) {
   const producto = productosData.find(p => p.id === productoId);
@@ -152,11 +97,11 @@ function agregarAlCarrito(productoId) {
     if (existente.cantidad < (producto.stock ?? 0)) existente.cantidad++;
   } else {
     carritoPOS.push({
-      id: producto.id,
-      nombre: producto.nombre,
-      precio: Number(producto.precio ?? 0),
+      id:       producto.id,
+      nombre:   producto.nombre,
+      precio:   Number(producto.precio ?? 0),
       cantidad: 1,
-      stock: producto.stock ?? 0
+      stock:    producto.stock ?? 0
     });
   }
 
@@ -174,15 +119,15 @@ function cambiarCantidad(id, delta) {
 }
 
 function renderCarrito() {
-  const body = document.getElementById("posCartBody");
-  const totalEl = document.getElementById("posTotal");
+  const body      = document.getElementById("posCartBody");
+  const totalEl   = document.getElementById("posTotal");
   const btnCobrar = document.getElementById("btnCobrar");
 
   if (carritoPOS.length === 0) {
     body.innerHTML = `<div class="pos-empty-cart">El carrito está vacío.<br>Haz clic en un producto para agregar.</div>`;
     totalEl.textContent = "S/ 0.00";
-    btnCobrar.disabled = true;
-    btnCobrar.classList.remove('btn-cobrar-active');
+    btnCobrar.disabled  = true;
+    btnCobrar.classList.remove("btn-cobrar-active");
     return;
   }
 
@@ -202,37 +147,193 @@ function renderCarrito() {
 
   const total = carritoPOS.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
   totalEl.textContent = `S/ ${total.toFixed(2)}`;
-  btnCobrar.disabled = false;
-  btnCobrar.classList.add('btn-cobrar-active');
+  btnCobrar.disabled  = false;
+  btnCobrar.classList.add("btn-cobrar-active");
 }
 
-async function cobrar() {
-  if (carritoPOS.length === 0) return;
+// ── Modal de comprobante ───────────────────────────────────────────────────
 
+function cobrar() {
+  if (carritoPOS.length === 0) return;
+  abrirModalDocumento();
+}
+
+function abrirModalDocumento() {
+  // Resetear formularios del modal
+  ["docDniInput", "docNombre", "docRucInput", "docRazonSocial", "docDireccion"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  ["docDniMensaje", "docRucMensaje"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = ""; el.className = "small mb-2"; }
+  });
+
+  // Restaurar el tipo ya seleccionado sin perder elección previa
+  switchDocTipo(docTipo, false);
+  new bootstrap.Modal(document.getElementById("docModal")).show();
+}
+
+function switchDocTipo(tipo, resetDatos = true) {
+  docTipo = tipo;
+  if (resetDatos) {
+    docClienteId = null;
+    docDatos     = {};
+  }
+
+  const paneles = { simple: "docPanelSimple", boleta: "docPanelDni", factura: "docPanelRuc" };
+  const botones = { simple: "docBtnSimple",   boleta: "docBtnDni",   factura: "docBtnRuc"   };
+
+  Object.keys(paneles).forEach(t => {
+    document.getElementById(paneles[t]).classList.toggle("d-none", t !== tipo);
+    const btn = document.getElementById(botones[t]);
+    btn.className = t === tipo
+      ? "btn btn-brand flex-fill"
+      : "btn btn-outline-secondary flex-fill";
+  });
+}
+
+// Buscar cliente por DNI en la lista ya cargada (primero local, luego API)
+async function buscarPorDocDni() {
+  const dni    = (document.getElementById("docDniInput").value || "").trim();
+  const msgEl  = document.getElementById("docDniMensaje");
+
+  msgEl.className = "small mb-2";
+  msgEl.textContent = "";
+
+  if (!/^\d{8}$/.test(dni)) {
+    msgEl.className = "small mb-2 text-danger";
+    msgEl.textContent = "Ingresa un DNI válido de 8 dígitos.";
+    return;
+  }
+
+  // Buscar primero en los clientes ya cargados
+  let cliente = clientesData.find(c => c.dni === dni);
+
+  // Si no está en cache, intentar con la API
+  if (!cliente) {
+    try {
+      cliente = await apiFetch(`/api/clientes/buscar?dni=${dni}`);
+    } catch {
+      cliente = null;
+    }
+  }
+
+  if (cliente) {
+    docClienteId = cliente.id;
+    document.getElementById("docNombre").value = cliente.nombre ?? "";
+    msgEl.className = "small mb-2 text-success";
+    msgEl.textContent = `✓ Cliente encontrado${cliente.telefono ? " · " + cliente.telefono : ""}`;
+  } else {
+    docClienteId = null;
+    document.getElementById("docNombre").value = "";
+    msgEl.className = "small mb-2 text-warning";
+    msgEl.textContent = "No encontrado. Puedes ingresar el nombre manualmente.";
+  }
+}
+
+// Buscar cliente por RUC
+async function buscarPorDocRuc() {
+  const ruc   = (document.getElementById("docRucInput").value || "").trim();
+  const msgEl = document.getElementById("docRucMensaje");
+
+  msgEl.className = "small mb-2";
+  msgEl.textContent = "";
+
+  if (!/^\d{11}$/.test(ruc)) {
+    msgEl.className = "small mb-2 text-danger";
+    msgEl.textContent = "Ingresa un RUC válido de 11 dígitos.";
+    return;
+  }
+
+  const cliente = clientesData.find(c => c.ruc === ruc);
+
+  if (cliente) {
+    docClienteId = cliente.id;
+    document.getElementById("docRazonSocial").value = cliente.nombre ?? "";
+    document.getElementById("docDireccion").value   = cliente.direccion ?? "";
+    msgEl.className = "small mb-2 text-success";
+    msgEl.textContent = `✓ Cliente encontrado${cliente.telefono ? " · " + cliente.telefono : ""}`;
+  } else {
+    docClienteId = null;
+    document.getElementById("docRazonSocial").value = "";
+    document.getElementById("docDireccion").value   = "";
+    msgEl.className = "small mb-2 text-warning";
+    msgEl.textContent = "No encontrado. Puedes ingresar los datos manualmente.";
+  }
+}
+
+// Confirmar cobro desde el modal
+async function confirmarCobro() {
+  // Validar y recoger datos según el tipo de documento
+  if (docTipo === "boleta") {
+    docDatos.nombre = (document.getElementById("docNombre").value || "").trim();
+    docDatos.dni    = (document.getElementById("docDniInput").value || "").trim();
+    if (!docDatos.nombre) {
+      mostrarMensajeDoc("Ingresa el nombre del cliente.", "docDniMensaje");
+      return;
+    }
+  } else if (docTipo === "factura") {
+    docDatos.razonSocial = (document.getElementById("docRazonSocial").value || "").trim();
+    docDatos.ruc         = (document.getElementById("docRucInput").value || "").trim();
+    docDatos.direccion   = (document.getElementById("docDireccion").value || "").trim();
+    if (!docDatos.razonSocial) {
+      mostrarMensajeDoc("Ingresa la razón social.", "docRucMensaje");
+      return;
+    }
+    if (!/^\d{11}$/.test(docDatos.ruc)) {
+      mostrarMensajeDoc("Ingresa el RUC (11 dígitos).", "docRucMensaje");
+      return;
+    }
+  }
+
+  // Actualizar el indicador del carrito
+  actualizarDocIndicador();
+
+  bootstrap.Modal.getInstance(document.getElementById("docModal")).hide();
+
+  // Ejecutar el cobro
+  await procesarCobro();
+}
+
+function mostrarMensajeDoc(texto, elId) {
+  const el = document.getElementById(elId);
+  el.className = "small mb-2 text-danger";
+  el.textContent = texto;
+}
+
+function actualizarDocIndicador() {
+  const labelEl = document.getElementById("posDocLabel");
+  if (docTipo === "simple") {
+    labelEl.textContent = "Boleta simple — Consumidor Final";
+  } else if (docTipo === "boleta") {
+    labelEl.textContent = `Boleta — ${docDatos.nombre}${docDatos.dni ? " (DNI " + docDatos.dni + ")" : ""}`;
+  } else {
+    labelEl.textContent = `Factura — ${docDatos.razonSocial} (RUC ${docDatos.ruc})`;
+  }
+}
+
+// ── Procesamiento del cobro ────────────────────────────────────────────────
+
+async function procesarCobro() {
   const btnCobrar = document.getElementById("btnCobrar");
   btnCobrar.disabled = true;
-  btnCobrar.classList.remove('btn-cobrar-active');
+  btnCobrar.classList.remove("btn-cobrar-active");
   btnCobrar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Procesando...';
   ocultarResultado();
 
-  const clienteId = document.getElementById("posClienteId").value;
-  const observacion = clienteSeleccionado
-    ? clienteSeleccionado.nombre
-    : document.getElementById("posClienteBuscar").value.trim() || null;
+  let observacion = null;
+  if (docTipo === "boleta")  observacion = `Boleta — ${docDatos.nombre}${docDatos.dni ? " DNI:" + docDatos.dni : ""}`;
+  if (docTipo === "factura") observacion = `Factura — ${docDatos.razonSocial} RUC:${docDatos.ruc}${docDatos.direccion ? " Dir:" + docDatos.direccion : ""}`;
 
   const payload = {
     tipoOrigen: "PRESENCIAL",
-    clienteId: clienteId ? parseInt(clienteId) : null,
-    observacion: observacion || null,
-    detalles: carritoPOS.map(item => ({
-      productoId: item.id,
-      cantidad: item.cantidad
-    }))
+    clienteId:  docClienteId || null,
+    observacion: observacion,
+    detalles: carritoPOS.map(item => ({ productoId: item.id, cantidad: item.cantidad }))
   };
 
-  // Capturamos el carrito actual antes de limpiar para usarlo en la boleta
-  const carritoParaBoleta = [...carritoPOS];
-  const clienteParaBoleta = clienteSeleccionado;
+  const carritoSnapshot = [...carritoPOS];
 
   try {
     const response = await apiFetch("/api/pedidos", {
@@ -240,7 +341,6 @@ async function cobrar() {
       body: JSON.stringify(payload)
     });
 
-    // Venta presencial: si todo el stock estaba disponible → marcar entregado automáticamente
     if (response.estado === "LISTO") {
       try {
         await apiFetch(`/api/pedidos/${response.id}/estado`, {
@@ -248,49 +348,40 @@ async function cobrar() {
           body: JSON.stringify({ estado: "ENTREGADO" })
         });
         response.estado = "ENTREGADO";
-      } catch (_) { /* no bloquear si falla el cambio de estado */ }
+      } catch { /* no bloquear */ }
     }
 
     mostrarResultado(response);
-    mostrarBoleta(response, carritoParaBoleta, clienteParaBoleta);
+    mostrarComprobante(response, carritoSnapshot);
     limpiarVenta();
   } catch (error) {
     mostrarError(error.message || "No se pudo procesar la venta");
     btnCobrar.disabled = false;
-    btnCobrar.innerHTML = 'Cobrar';
+    btnCobrar.innerHTML = '<i class="bi bi-cash-coin me-2"></i>Cobrar';
   }
 }
 
+// ── Resultado y comprobante ────────────────────────────────────────────────
+
 function mostrarResultado(pedido) {
-  const box = document.getElementById("posResultado");
+  const box      = document.getElementById("posResultado");
   const detalles = pedido.detalles || [];
-  const todosAtendidos = detalles.every(d => d.cantidadAtendida >= d.cantidad);
+  const todosOk  = detalles.every(d => d.cantidadAtendida >= d.cantidad);
 
   let clase, titulo, cuerpo;
-
-  if (pedido.estado === "ENTREGADO") {
-    clase = "completado";
-    titulo = "✓ Venta completada y entregada";
-    cuerpo = detalles.map(d =>
-      `<div>${d.productoNombre}: ${d.cantidadAtendida} entregado(s)</div>`
-    ).join("");
-  } else if (todosAtendidos) {
-    clase = "completado";
-    titulo = "✓ Venta completada";
-    cuerpo = detalles.map(d =>
-      `<div>${d.productoNombre}: ${d.cantidadAtendida} entregado(s)</div>`
-    ).join("");
+  if (pedido.estado === "ENTREGADO" || todosOk) {
+    clase  = "completado";
+    titulo = pedido.estado === "ENTREGADO" ? "✓ Venta completada y entregada" : "✓ Venta completada";
+    cuerpo = detalles.map(d => `<div>${d.productoNombre}: ${d.cantidadAtendida} entregado(s)</div>`).join("");
   } else {
-    clase = "parcial";
+    clase  = "parcial";
     titulo = "⚠ Stock parcial — pendiente de producción";
     cuerpo = detalles.map(d => {
-      if (d.cantidadAtendida >= d.cantidad) {
+      if (d.cantidadAtendida >= d.cantidad)
         return `<div>${d.productoNombre}: ${d.cantidadAtendida} entregado(s) ✓</div>`;
-      } else if (d.cantidadAtendida > 0) {
+      if (d.cantidadAtendida > 0)
         return `<div>${d.productoNombre}: ${d.cantidadAtendida} de ${d.cantidad} — ${d.cantidadPendiente} pendiente(s)</div>`;
-      } else {
-        return `<div>${d.productoNombre}: sin stock — ${d.cantidad} pendiente(s)</div>`;
-      }
+      return `<div>${d.productoNombre}: sin stock — ${d.cantidad} pendiente(s)</div>`;
     }).join("");
   }
 
@@ -314,23 +405,32 @@ function ocultarResultado() {
   box.innerHTML = "";
 }
 
-function mostrarBoleta(pedido, carrito, cliente) {
+function mostrarComprobante(pedido, carrito) {
   const ahora = new Date();
   const fecha = ahora.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" });
   const hora  = ahora.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
-
   document.getElementById("boletaFecha").textContent = `${fecha}  ${hora}`;
 
+  // Tipo de documento en el encabezado
+  const tipoDocEl = document.getElementById("boletaTipoDoc");
+  tipoDocEl.textContent = docTipo === "factura" ? "FACTURA" : "BOLETA DE VENTA";
+
+  // Datos del emisor/receptor
   const clienteEl = document.getElementById("boletaCliente");
-  if (cliente) {
+  if (docTipo === "simple") {
+    clienteEl.innerHTML = `<span class="text-muted" style="font-size:0.78rem">Consumidor Final</span>`;
+  } else if (docTipo === "boleta") {
     clienteEl.innerHTML =
-      `<span>Cliente: <strong>${cliente.nombre}</strong></span>` +
-      (cliente.dni ? `<br><span>DNI: ${cliente.dni}</span>` : "");
-    clienteEl.style.display = "block";
+      `<strong>${docDatos.nombre}</strong>` +
+      (docDatos.dni ? `<br><span>DNI: ${docDatos.dni}</span>` : "");
   } else {
-    clienteEl.style.display = "none";
+    clienteEl.innerHTML =
+      `<strong>${docDatos.razonSocial}</strong>` +
+      `<br><span>RUC: ${docDatos.ruc}</span>` +
+      (docDatos.direccion ? `<br><span style="font-size:0.78rem">${docDatos.direccion}</span>` : "");
   }
 
+  // Items
   const detallesResp = pedido.detalles || [];
   const tabla = document.getElementById("boletaItems");
   tabla.innerHTML = `
@@ -338,25 +438,22 @@ function mostrarBoleta(pedido, carrito, cliente) {
       <th>Producto</th><th>Cant.</th><th>P.U.</th><th>Subtotal</th>
     </tr>
   ` + carrito.map(item => {
-    const det = detallesResp.find(d => d.productoId === item.id);
+    const det      = detallesResp.find(d => d.productoId === item.id);
     const atendido = det ? det.cantidadAtendida : item.cantidad;
-    const subtotal = item.precio * atendido;
     return `
       <tr>
         <td>${item.nombre}</td>
         <td>${atendido}</td>
         <td>S/${item.precio.toFixed(2)}</td>
-        <td>S/${subtotal.toFixed(2)}</td>
+        <td>S/${(item.precio * atendido).toFixed(2)}</td>
       </tr>
     `;
   }).join("");
 
   const total = carrito.reduce((acc, item) => {
     const det = detallesResp.find(d => d.productoId === item.id);
-    const atendido = det ? det.cantidadAtendida : item.cantidad;
-    return acc + item.precio * atendido;
+    return acc + item.precio * (det ? det.cantidadAtendida : item.cantidad);
   }, 0);
-
   document.getElementById("boletaTotal").textContent = `S/ ${total.toFixed(2)}`;
 
   new bootstrap.Modal(document.getElementById("boletaModal")).show();
@@ -366,10 +463,15 @@ function imprimirBoleta() {
   window.print();
 }
 
+// ── Reset ──────────────────────────────────────────────────────────────────
+
 function limpiarVenta() {
-  carritoPOS = [];
-  limpiarCliente();
-  document.getElementById("btnCobrar").innerHTML = "Cobrar";
+  carritoPOS   = [];
+  docClienteId = null;
+  docDatos     = {};
+  docTipo      = "simple";
+  document.getElementById("posDocLabel").textContent = "Boleta simple";
+  document.getElementById("btnCobrar").innerHTML = '<i class="bi bi-cash-coin me-2"></i>Cobrar';
   renderCarrito();
   filtrarProductos();
 }

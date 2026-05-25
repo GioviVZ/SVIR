@@ -125,19 +125,16 @@
               <span class="pos-total" id="posTotal">S/ 0.00</span>
             </div>
 
-            <div class="mb-3 pos-cliente-wrap">
-              <input type="text" id="posClienteBuscar" class="form-control"
-                placeholder="Buscar cliente por nombre o DNI..." autocomplete="off">
-              <input type="hidden" id="posClienteId">
-              <div id="posClienteSugerencias" class="pos-sugerencias d-none"></div>
-              <div id="posClienteSeleccionado" class="pos-cliente-tag d-none">
-                <span id="posClienteNombre"></span>
-                <button type="button" onclick="limpiarCliente()" class="pos-cliente-tag-clear">✕</button>
-              </div>
+            <!-- Indicador de comprobante seleccionado -->
+            <div id="posDocIndicador" class="pos-doc-indicador mb-3"
+                 onclick="abrirModalDocumento()" title="Cambiar comprobante">
+              <i class="bi bi-receipt me-2 opacity-50"></i>
+              <span id="posDocLabel">Boleta simple</span>
+              <i class="bi bi-pencil ms-auto opacity-50" style="font-size:0.75rem"></i>
             </div>
 
             <button id="btnCobrar" class="btn btn-brand btn-lg w-100" onclick="cobrar()" disabled>
-              Cobrar
+              <i class="bi bi-cash-coin me-2"></i>Cobrar
             </button>
 
             <div id="posResultado" class="pos-result-box d-none mt-3"></div>
@@ -149,7 +146,100 @@
   </main>
 </div>
 
-<!-- Modal Boleta -->
+<!-- ── MODAL: Tipo de comprobante ───────────────────────── -->
+<div class="modal fade" id="docModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4">
+      <div class="modal-header border-0 pb-0 px-4 pt-4">
+        <h5 class="modal-title fw-bold">Tipo de comprobante</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body px-4 pb-2 pt-3">
+
+        <!-- Selector de tipo -->
+        <div class="d-flex gap-2 mb-4">
+          <button class="btn btn-brand flex-fill" id="docBtnSimple"
+            onclick="switchDocTipo('simple')">
+            <i class="bi bi-receipt me-1"></i>Boleta simple
+          </button>
+          <button class="btn btn-outline-secondary flex-fill" id="docBtnDni"
+            onclick="switchDocTipo('boleta')">
+            <i class="bi bi-person me-1"></i>Con DNI
+          </button>
+          <button class="btn btn-outline-secondary flex-fill" id="docBtnRuc"
+            onclick="switchDocTipo('factura')">
+            <i class="bi bi-building me-1"></i>Factura
+          </button>
+        </div>
+
+        <!-- Panel: Boleta simple -->
+        <div id="docPanelSimple">
+          <div class="alert alert-light border py-2 px-3 mb-0" style="border-radius:12px; font-size:0.85rem;">
+            <i class="bi bi-info-circle me-1 text-muted"></i>
+            Se emitirá a <strong>Consumidor Final</strong>. No se requieren datos adicionales.
+          </div>
+        </div>
+
+        <!-- Panel: Boleta con DNI -->
+        <div id="docPanelDni" class="d-none">
+          <div class="input-group mb-3">
+            <input type="text" id="docDniInput" class="form-control"
+              placeholder="Ingresa el DNI (8 dígitos)"
+              maxlength="8" inputmode="numeric" pattern="\d{8}">
+            <button class="btn btn-outline-secondary" type="button" onclick="buscarPorDocDni()">
+              <i class="bi bi-search"></i> Buscar
+            </button>
+          </div>
+          <div id="docDniMensaje" class="small mb-2"></div>
+          <div class="row g-2" id="docDniCampos">
+            <div class="col-12">
+              <label class="form-label small fw-semibold mb-1">Nombre del cliente</label>
+              <input type="text" id="docNombre" class="form-control"
+                placeholder="Nombre completo" maxlength="120">
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel: Factura con RUC -->
+        <div id="docPanelRuc" class="d-none">
+          <div class="input-group mb-3">
+            <input type="text" id="docRucInput" class="form-control"
+              placeholder="Ingresa el RUC (11 dígitos)"
+              maxlength="11" inputmode="numeric" pattern="\d{11}">
+            <button class="btn btn-outline-secondary" type="button" onclick="buscarPorDocRuc()">
+              <i class="bi bi-search"></i> Buscar
+            </button>
+          </div>
+          <div id="docRucMensaje" class="small mb-2"></div>
+          <div class="row g-2" id="docRucCampos">
+            <div class="col-12">
+              <label class="form-label small fw-semibold mb-1">Razón social</label>
+              <input type="text" id="docRazonSocial" class="form-control"
+                placeholder="Nombre de la empresa" maxlength="150">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold mb-1">Dirección fiscal</label>
+              <input type="text" id="docDireccion" class="form-control"
+                placeholder="Dirección" maxlength="255">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer border-0 px-4 pt-2 pb-4">
+        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" id="btnConfirmarCobro" class="btn btn-brand btn-lg flex-fill"
+          onclick="confirmarCobro()">
+          <i class="bi bi-cash-coin me-2"></i>Confirmar cobro
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: Boleta / Factura ───────────────────────────── -->
 <div class="modal fade" id="boletaModal" tabindex="-1">
   <div class="modal-dialog modal-sm">
     <div class="modal-content border-0 rounded-4">
@@ -161,6 +251,7 @@
             <div class="boleta-logo">DM</div>
             <h5 class="boleta-negocio">Dulce Momento</h5>
             <p class="boleta-sub">Repostería artesanal</p>
+            <p class="boleta-tipo-doc" id="boletaTipoDoc">BOLETA DE VENTA</p>
             <p class="boleta-sub" id="boletaFecha"></p>
           </div>
 
@@ -185,7 +276,9 @@
       </div>
       <div class="modal-footer border-0 pt-0 gap-2">
         <button class="btn btn-outline-secondary flex-fill" data-bs-dismiss="modal">Cerrar</button>
-        <button class="btn btn-brand flex-fill" onclick="imprimirBoleta()">Imprimir</button>
+        <button class="btn btn-brand flex-fill" onclick="imprimirBoleta()">
+          <i class="bi bi-printer me-1"></i>Imprimir
+        </button>
       </div>
     </div>
   </div>
