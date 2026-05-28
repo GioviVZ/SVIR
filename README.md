@@ -217,6 +217,8 @@ python3 -m http.server 5500
 
 *Público para pedidos de tienda web (`tipoOrigen: "TIENDA"`); el POS envía `"PRESENCIAL"`.
 
+La respuesta incluye `produccionId` (nullable): cuando el pedido se crea desde el POS con stock insuficiente, el sistema auto-genera una orden de producción y devuelve su ID en este campo.
+
 ### Producciones (`/api/producciones`)
 
 | Método | Ruta | Acceso | Descripción |
@@ -271,7 +273,7 @@ Los clientes del sitio público tienen tres modos de acceso en el modal de `home
 
 El personal puede restablecer la contraseña de cualquier cliente desde `clientes.html` con el botón 🔑 de cada fila.
 
-### POS — Emisión de comprobante
+### POS — Flujo de venta completo
 
 Al presionar **Cobrar** en el POS se abre un modal de selección de comprobante:
 
@@ -283,15 +285,52 @@ Al presionar **Cobrar** en el POS se abre un modal de selección de comprobante:
 
 El ticket imprimible muestra el tipo de documento (`BOLETA DE VENTA` / `FACTURA`), los datos del receptor y el detalle de productos atendidos.
 
-Si el pedido queda en estado `LISTO` (stock suficiente), el POS lo marca automáticamente como `ENTREGADO`.
+#### Estados resultantes al cobrar
 
-### Producción — Descuento de ingredientes
+| Situación | Estado del pedido | Acción automática |
+|---|---|---|
+| Todo el stock disponible | `LISTO` | Se marca `ENTREGADO` de inmediato |
+| Stock parcial o sin stock | `PREPARACION` | Se crea una orden de producción en cocina automáticamente |
 
-Al terminar una orden de cocina (`PATCH /api/producciones/{id}/terminar`), el sistema:
+Cuando hay stock insuficiente, el POS muestra el número de la orden de producción generada (p. ej. *"Orden de producción #12 enviada a cocina"*) para que el cajero confirme que cocina ya tiene la tarea.
 
-1. Suma `cantidadProducida` al stock de cada producto.
-2. Descuenta los ingredientes según la receta de cada producto producido.
-3. Registra un `MovimientoProducto` (ENTRADA / PRODUCCION) y un `MovimientoIngrediente` (SALIDA / PRODUCCION) por cada ítem.
+#### Auto-creación de orden de producción
+
+El sistema crea la orden automáticamente siguiendo estas reglas:
+
+- Solo se incluyen los productos con cantidad faltante (los que ya se atendieron con stock no entran).
+- Si un producto no tiene receta configurada, se omite de la orden sin cancelar el pedido.
+- Los ingredientes se descuentan en ese momento si hay stock suficiente; si faltan ingredientes, se omite ese descuento y la cocina verá la alerta de stock bajo al revisar.
+- Los pedidos de la tienda web (anónimos) **no** generan producción automática; cocina los gestiona manualmente.
+
+### Producción — Ciclo de vida de una orden
+
+#### Creación
+
+Una orden de producción puede originarse de dos formas:
+
+| Origen | Método | Descripción |
+|---|---|---|
+| **Automático** | Desde el POS al crear un pedido con faltantes | La orden se crea con observación *"Generado automáticamente desde venta"* |
+| **Manual** | `POST /api/producciones/por-pedido/{pedidoId}` | El personal de cocina crea la orden para un pedido con faltantes |
+| **Para reponer stock** | `POST /api/producciones` | Sin pedido origen; solo para aumentar el inventario de un producto |
+
+#### Terminación
+
+Al terminar una orden (`PATCH /api/producciones/{id}/terminar`), el sistema:
+
+1. Actualiza `cantidadProducida` en cada detalle.
+2. Suma `cantidadProducida` al stock del producto correspondiente.
+3. Registra un `MovimientoProducto` (ENTRADA / PRODUCCION) por cada ítem producido.
+4. Si la orden estaba vinculada a un pedido, actualiza `cantidadAtendida` en los detalles del pedido y recalcula su estado (`PREPARACION` → `LISTO` si ya todo fue atendido).
+
+#### Cancelación
+
+Al cancelar una orden (`PATCH /api/producciones/{id}/cancelar`), el sistema devuelve al inventario todos los ingredientes que se descontaron al crear la orden:
+
+1. Recalcula por receta la cantidad consumida de cada ingrediente (`cantidad_receta × cantidad_planificada`).
+2. Suma esa cantidad de vuelta al stock del ingrediente.
+3. Registra un `MovimientoIngrediente` (ENTRADA / CANCELACION) por cada ingrediente devuelto.
 
 ---
 
@@ -365,11 +404,13 @@ productos ──┬── recetas ── ingredientes            │   │
 | `id` | INT PK AI | Identificador |
 | `nombre` | VARCHAR(100) NOT NULL | Nombre del ingrediente |
 | `unidad_medida` | VARCHAR(20) NOT NULL | Unidad: kg, litro, gramo, unidad… |
-| `stock` | DECIMAL(10,2) NOT NULL DEFAULT 0 | Stock actual |
+| `stock` | DECIMAL(10,2) NOT NULL DEFAULT 0 | Stock actual (admite decimales: 0.5 kg, 250 g…) |
 | `stock_minimo` | DECIMAL(10,2) NOT NULL DEFAULT 0 | Umbral de alerta |
 | `activo` | TINYINT(1) DEFAULT 1 | Estado |
 | `created_at` | TIMESTAMP | Fecha de creación |
 | `updated_at` | TIMESTAMP | Última modificación |
+
+> **Nota:** `stock` y `stock_minimo` se mapean como `BigDecimal` en Java para preservar la precisión decimal. Los valores enviados por la API y los mostrados en el frontend también son decimales.
 
 ### Tabla `recetas`
 
@@ -462,7 +503,7 @@ Restricción única: `(producto_id, ingrediente_id)`.
 | `id` | INT PK AI | Identificador |
 | `ingrediente_id` | INT FK → ingredientes | Ingrediente afectado |
 | `tipo` | ENUM('ENTRADA','SALIDA','AJUSTE') | Dirección del movimiento |
-| `motivo` | ENUM | COMPRA · PRODUCCION · MERMA · AJUSTE_MANUAL |
+| `motivo` | ENUM | COMPRA · PRODUCCION · **CANCELACION** · MERMA · AJUSTE_MANUAL |
 | `cantidad` | DECIMAL(10,2) NOT NULL | Cantidad movida |
 | `stock_anterior` | DECIMAL(10,2) NOT NULL | Stock antes del movimiento |
 | `stock_nuevo` | DECIMAL(10,2) NOT NULL | Stock después del movimiento |
@@ -471,6 +512,14 @@ Restricción única: `(producto_id, ingrediente_id)`.
 | `usuario_id` | INT FK → usuarios | Empleado responsable |
 | `created_at` | TIMESTAMP | Fecha del movimiento |
 
+El motivo `CANCELACION` (ENTRADA) se registra cuando una orden de producción es cancelada y los ingredientes son devueltos al stock.
+
+> **Migración requerida** si ya existe la tabla en producción:
+> ```sql
+> ALTER TABLE movimientos_ingrediente
+>   MODIFY COLUMN motivo ENUM('COMPRA','PRODUCCION','CANCELACION','MERMA','AJUSTE_MANUAL') NOT NULL;
+> ```
+
 ---
 
 ## Seguridad
@@ -478,5 +527,22 @@ Restricción única: `(producto_id, ingrediente_id)`.
 - **Personal interno:** autenticación JWT con expiración de 24 h. El token se envía en `Authorization: Bearer <token>`.
 - **Filtro JWT tolerante:** si el token está expirado o malformado, el filtro lo descarta silenciosamente y la petición continúa sin autenticación. Las rutas `permitAll()` funcionan aunque el cliente tenga un token vencido en localStorage.
 - **Contraseñas:** hasheadas con BCrypt tanto para usuarios del personal como para clientes de tienda web.
-- **Roles:** aplicados con `@PreAuthorize` / `hasAnyRole` en `SecurityConfig`. El frontend oculta secciones según el rol del JWT almacenado.
-- **CORS:** habilitado para todos los orígenes (`allowedOriginPatterns: "*"`) durante desarrollo.
+- **Roles:** aplicados con `hasAnyRole` en `SecurityConfig`. El frontend oculta secciones según el rol del JWT almacenado.
+- **CORS:** habilitado para todos los orígenes (`allowedOriginPatterns: "*"`) durante desarrollo. Restringir a los dominios reales antes de pasar a producción.
+- **Auto-producción:** solo se activa cuando hay un usuario interno autenticado. Los pedidos anónimos de la tienda web no generan órdenes de producción automáticas.
+
+---
+
+## Historial de cambios relevantes
+
+### Flujo de producción automática desde Ventas
+
+Antes el POS creaba el pedido y dejaba la producción para que cocina la iniciara manualmente. Ahora, cuando un pedido queda en estado `PREPARACION` (stock insuficiente), el sistema crea automáticamente una orden de producción y devuelve su `produccionId` en la respuesta del pedido.
+
+### Cancelación de producción restaura ingredientes
+
+Antes, cancelar una orden de producción solo cambiaba su estado sin devolver los ingredientes descontados. Ahora el sistema recalcula por receta los ingredientes consumidos y los restaura al stock, registrando un movimiento `ENTRADA / CANCELACION`.
+
+### Stock de ingredientes en `BigDecimal`
+
+El campo `stock` y `stock_minimo` de ingredientes se mapeaban como `Integer` en Java, truncando valores decimales (ej. 0.5 kg). Ahora se usan como `BigDecimal` en toda la cadena: entidades, DTOs, servicios y respuestas de la API.
