@@ -5,6 +5,7 @@ import com.svir.api.enums.TipoMovimiento;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,14 +33,14 @@ public class MovimientoIngrediente {
     @Column(nullable = false, length = 30)
     private MotivoMovimientoIngrediente motivo;
 
-    @Column(nullable = false)
-    private Integer cantidad;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal cantidad;
 
-    @Column(name = "stock_anterior", nullable = false)
-    private Integer stockAnterior;
+    @Column(name = "stock_anterior", nullable = false, precision = 10, scale = 2)
+    private BigDecimal stockAnterior;
 
-    @Column(name = "stock_nuevo", nullable = false)
-    private Integer stockNuevo;
+    @Column(name = "stock_nuevo", nullable = false, precision = 10, scale = 2)
+    private BigDecimal stockNuevo;
 
     @Column(name = "referencia_tipo", length = 50)
     private String referenciaTipo;

@@ -375,7 +375,10 @@ function mostrarResultado(pedido) {
     cuerpo = detalles.map(d => `<div>${d.productoNombre}: ${d.cantidadAtendida} entregado(s)</div>`).join("");
   } else {
     clase  = "parcial";
-    titulo = "⚠ Stock parcial — pendiente de producción";
+    const prodTag = pedido.produccionId
+      ? `<span style="font-size:0.8rem;opacity:0.85"> · Orden de producción #${pedido.produccionId} enviada a cocina</span>`
+      : `<span style="font-size:0.8rem;opacity:0.85"> · Pendiente de producción</span>`;
+    titulo = `⚠ Stock parcial${prodTag}`;
     cuerpo = detalles.map(d => {
       if (d.cantidadAtendida >= d.cantidad)
         return `<div>${d.productoNombre}: ${d.cantidadAtendida} entregado(s) ✓</div>`;

@@ -3,6 +3,7 @@ package com.svir.api.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,11 +25,11 @@ public class Ingrediente {
     @Column(name = "unidad_medida", nullable = false, length = 30)
     private String unidadMedida;
 
-    @Column(nullable = false)
-    private Integer stock;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal stock;
 
-    @Column(name = "stock_minimo")
-    private Integer stockMinimo;
+    @Column(name = "stock_minimo", precision = 10, scale = 2)
+    private BigDecimal stockMinimo;
 
     @Column(nullable = false)
     private Boolean activo;

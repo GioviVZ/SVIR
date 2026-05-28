@@ -2,9 +2,11 @@ package com.svir.api.dto.ingrediente;
 
 import com.svir.api.enums.MotivoMovimientoIngrediente;
 import com.svir.api.enums.TipoMovimiento;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 public class MovimientoIngredienteRequest {
@@ -16,8 +18,8 @@ public class MovimientoIngredienteRequest {
     private MotivoMovimientoIngrediente motivo;
 
     @NotNull
-    @Min(1)
-    private Integer cantidad;
+    @DecimalMin("0.01")
+    private BigDecimal cantidad;
 
     private String referenciaTipo;
     private Long referenciaId;

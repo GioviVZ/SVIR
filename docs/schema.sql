@@ -167,7 +167,7 @@ CREATE TABLE `movimientos_ingrediente` (
   `id`              INT            NOT NULL AUTO_INCREMENT,
   `ingrediente_id`  INT            NOT NULL,
   `tipo`            ENUM('ENTRADA','SALIDA','AJUSTE') NOT NULL,
-  `motivo`          ENUM('COMPRA','PRODUCCION','MERMA','AJUSTE_MANUAL') NOT NULL,
+  `motivo`          ENUM('COMPRA','PRODUCCION','CANCELACION','MERMA','AJUSTE_MANUAL') NOT NULL,
   `cantidad`        DECIMAL(10,2)  NOT NULL,
   `stock_anterior`  DECIMAL(10,2)  NOT NULL,
   `stock_nuevo`     DECIMAL(10,2)  NOT NULL,

@@ -2,9 +2,12 @@ package com.svir.api.controller;
 
 import com.svir.api.dto.pedido.PedidoCreateRequest;
 import com.svir.api.dto.pedido.PedidoResponse;
+import com.svir.api.dto.produccion.ProduccionResponse;
 import com.svir.api.service.PedidoService;
+import com.svir.api.service.ProduccionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import com.svir.api.dto.pedido.PedidoEstadoUpdateRequest;
 
@@ -16,6 +19,7 @@ import java.util.List;
 public class PedidoController {
 
     private final PedidoService pedidoService;
+    private final ProduccionService produccionService;
 
     @GetMapping
     public List<PedidoResponse> listar() {
@@ -28,8 +32,20 @@ public class PedidoController {
     }
 
     @PostMapping
-    public PedidoResponse crear(@Valid @RequestBody PedidoCreateRequest request) {
-        return pedidoService.crearPedido(request);
+    public PedidoResponse crear(@Valid @RequestBody PedidoCreateRequest request, Authentication auth) {
+        PedidoResponse pedido = pedidoService.crearPedido(request);
+
+        boolean usuarioInterno = auth != null && auth.isAuthenticated()
+                && !"anonymousUser".equals(auth.getName());
+
+        if (Boolean.TRUE.equals(pedido.getProduccionRequerida()) && usuarioInterno) {
+            try {
+                ProduccionResponse prod = produccionService.crearProduccionDesdeVenta(pedido.getId());
+                if (prod != null) pedido.setProduccionId(prod.getId());
+            } catch (RuntimeException ignored) { }
+        }
+
+        return pedido;
     }
     @PatchMapping("/{id}/estado")
     public PedidoResponse cambiarEstado(@PathVariable Long id,

@@ -21,6 +21,7 @@ public class PedidoResponse {
     private String tipoOrigen;
     private String observacion;
     private Boolean produccionRequerida;
+    private Long produccionId;
     private LocalDateTime createdAt;
     private List<PedidoDetalleResponse> detalles;
 }

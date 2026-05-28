@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,10 +73,8 @@ public class ProduccionService {
             }
 
             for (Receta receta : recetaItems) {
-                int cantidadConsumir = receta.getCantidad()
-                        .multiply(BigDecimal.valueOf(faltante))
-                        .setScale(0, RoundingMode.CEILING)
-                        .intValue();
+                BigDecimal cantidadConsumir = receta.getCantidad()
+                        .multiply(BigDecimal.valueOf(faltante));
 
                 ingredienteService.consumirPorProduccion(
                         receta.getIngrediente(),
@@ -130,10 +127,8 @@ public class ProduccionService {
             }
 
             for (Receta receta : recetaItems) {
-                int cantidadConsumir = receta.getCantidad()
-                        .multiply(BigDecimal.valueOf(item.getCantidadPlanificada()))
-                        .setScale(0, RoundingMode.CEILING)
-                        .intValue();
+                BigDecimal cantidadConsumir = receta.getCantidad()
+                        .multiply(BigDecimal.valueOf(item.getCantidadPlanificada()));
 
                 ingredienteService.consumirPorProduccion(
                         receta.getIngrediente(),
@@ -226,6 +221,70 @@ public class ProduccionService {
     }
 
     @Transactional
+    public ProduccionResponse crearProduccionDesdeVenta(Long pedidoId) {
+        Usuario usuario = getUsuarioAutenticado();
+
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        List<DetallePedido> faltantes = detallePedidoRepository.findByPedidoIdOrderByIdAsc(pedidoId)
+                .stream()
+                .filter(d -> d.getCantidadAtendida() < d.getCantidad())
+                .toList();
+
+        if (faltantes.isEmpty()) return null;
+
+        Produccion produccion = Produccion.builder()
+                .tipo(TipoProduccion.PEDIDO)
+                .pedido(pedido)
+                .usuario(usuario)
+                .estado(EstadoProduccion.EN_PROCESO)
+                .observacion("Generado automáticamente desde venta")
+                .fechaInicio(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        produccion = produccionRepository.save(produccion);
+
+        List<ProduccionDetalle> detalles = new ArrayList<>();
+
+        for (DetallePedido detallePedido : faltantes) {
+            Producto producto = detallePedido.getProducto();
+            int faltante = detallePedido.getCantidad() - detallePedido.getCantidadAtendida();
+
+            List<Receta> recetaItems = recetaRepository.findByProductoIdOrderByIdAsc(producto.getId());
+            if (recetaItems.isEmpty()) continue; // sin receta — omitir este producto
+
+            for (Receta receta : recetaItems) {
+                BigDecimal cantidadConsumir = receta.getCantidad()
+                        .multiply(BigDecimal.valueOf(faltante));
+
+                ingredienteService.consumirSiHayStock(
+                        receta.getIngrediente(),
+                        cantidadConsumir,
+                        "PRODUCCION",
+                        produccion.getId(),
+                        usuario
+                );
+            }
+
+            ProduccionDetalle detalle = ProduccionDetalle.builder()
+                    .produccion(produccion)
+                    .producto(producto)
+                    .cantidadPlanificada(faltante)
+                    .cantidadProducida(0)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            detalles.add(produccionDetalleRepository.save(detalle));
+        }
+
+        if (detalles.isEmpty()) return null; // todos los productos sin receta
+
+        return toResponse(produccion, detalles);
+    }
+
+    @Transactional
     public ProduccionResponse cancelarProduccion(Long id) {
         Produccion produccion = produccionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producción no encontrada"));
@@ -237,11 +296,28 @@ public class ProduccionService {
             throw new RuntimeException("La producción ya está cancelada");
         }
 
+        Usuario usuario = getUsuarioAutenticado();
+        List<ProduccionDetalle> detalles = produccionDetalleRepository.findByProduccionIdOrderByIdAsc(id);
+
+        for (ProduccionDetalle detalle : detalles) {
+            List<Receta> recetaItems = recetaRepository.findByProductoIdOrderByIdAsc(detalle.getProducto().getId());
+            for (Receta receta : recetaItems) {
+                BigDecimal cantidadRestaurar = receta.getCantidad()
+                        .multiply(BigDecimal.valueOf(detalle.getCantidadPlanificada()));
+
+                ingredienteService.restaurarPorCancelacion(
+                        receta.getIngrediente(),
+                        cantidadRestaurar,
+                        produccion.getId(),
+                        usuario
+                );
+            }
+        }
+
         produccion.setEstado(EstadoProduccion.CANCELADO);
         produccion.setFechaFin(LocalDateTime.now());
         produccionRepository.save(produccion);
 
-        List<ProduccionDetalle> detalles = produccionDetalleRepository.findByProduccionIdOrderByIdAsc(id);
         return toResponse(produccion, detalles);
     }
 

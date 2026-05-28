@@ -1,9 +1,11 @@
 package com.svir.api.dto.ingrediente;
 
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 public class IngredienteRequest {
@@ -15,11 +17,11 @@ public class IngredienteRequest {
     private String unidadMedida;
 
     @NotNull
-    @Min(0)
-    private Integer stock;
+    @DecimalMin("0.00")
+    private BigDecimal stock;
 
-    @Min(0)
-    private Integer stockMinimo;
+    @DecimalMin("0.00")
+    private BigDecimal stockMinimo;
 
     private Boolean activo;
 }

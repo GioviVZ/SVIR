@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -79,14 +80,14 @@ public class IngredienteService {
         Ingrediente ingrediente = ingredienteRepository.findById(ingredienteId)
                 .orElseThrow(() -> new RuntimeException("Ingrediente no encontrado"));
 
-        int stockAnterior = ingrediente.getStock();
-        int stockNuevo;
+        BigDecimal stockAnterior = ingrediente.getStock();
+        BigDecimal stockNuevo;
 
         if (request.getTipo() == TipoMovimiento.ENTRADA) {
-            stockNuevo = stockAnterior + request.getCantidad();
+            stockNuevo = stockAnterior.add(request.getCantidad());
         } else if (request.getTipo() == TipoMovimiento.SALIDA) {
-            stockNuevo = stockAnterior - request.getCantidad();
-            if (stockNuevo < 0) {
+            stockNuevo = stockAnterior.subtract(request.getCantidad());
+            if (stockNuevo.compareTo(BigDecimal.ZERO) < 0) {
                 throw new RuntimeException("Stock insuficiente para salida");
             }
         } else {
@@ -124,15 +125,15 @@ public class IngredienteService {
 
     @Transactional
     public void consumirPorProduccion(Ingrediente ingrediente,
-                                      int cantidadConsumida,
+                                      BigDecimal cantidadConsumida,
                                       String referenciaTipo,
                                       Long referenciaId,
                                       Usuario usuario) {
 
-        int stockAnterior = ingrediente.getStock();
-        int stockNuevo = stockAnterior - cantidadConsumida;
+        BigDecimal stockAnterior = ingrediente.getStock();
+        BigDecimal stockNuevo = stockAnterior.subtract(cantidadConsumida);
 
-        if (stockNuevo < 0) {
+        if (stockNuevo.compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException("Stock insuficiente del ingrediente: " + ingrediente.getNombre());
         }
 
@@ -148,6 +149,69 @@ public class IngredienteService {
                 .stockAnterior(stockAnterior)
                 .stockNuevo(stockNuevo)
                 .referenciaTipo(referenciaTipo)
+                .referenciaId(referenciaId)
+                .usuario(usuario)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        movimientoIngredienteRepository.save(movimiento);
+    }
+
+    @Transactional
+    public void consumirSiHayStock(Ingrediente ingrediente,
+                                   BigDecimal cantidadConsumida,
+                                   String referenciaTipo,
+                                   Long referenciaId,
+                                   Usuario usuario) {
+
+        BigDecimal stockAnterior = ingrediente.getStock();
+        BigDecimal stockNuevo = stockAnterior.subtract(cantidadConsumida);
+
+        if (stockNuevo.compareTo(BigDecimal.ZERO) < 0) {
+            return; // ingrediente insuficiente — se omite sin lanzar excepción
+        }
+
+        ingrediente.setStock(stockNuevo);
+        ingrediente.setUpdatedAt(LocalDateTime.now());
+        ingredienteRepository.save(ingrediente);
+
+        MovimientoIngrediente movimiento = MovimientoIngrediente.builder()
+                .ingrediente(ingrediente)
+                .tipo(TipoMovimiento.SALIDA)
+                .motivo(MotivoMovimientoIngrediente.PRODUCCION)
+                .cantidad(cantidadConsumida)
+                .stockAnterior(stockAnterior)
+                .stockNuevo(stockNuevo)
+                .referenciaTipo(referenciaTipo)
+                .referenciaId(referenciaId)
+                .usuario(usuario)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        movimientoIngredienteRepository.save(movimiento);
+    }
+
+    @Transactional
+    public void restaurarPorCancelacion(Ingrediente ingrediente,
+                                        BigDecimal cantidadRestaurada,
+                                        Long referenciaId,
+                                        Usuario usuario) {
+
+        BigDecimal stockAnterior = ingrediente.getStock();
+        BigDecimal stockNuevo = stockAnterior.add(cantidadRestaurada);
+
+        ingrediente.setStock(stockNuevo);
+        ingrediente.setUpdatedAt(LocalDateTime.now());
+        ingredienteRepository.save(ingrediente);
+
+        MovimientoIngrediente movimiento = MovimientoIngrediente.builder()
+                .ingrediente(ingrediente)
+                .tipo(TipoMovimiento.ENTRADA)
+                .motivo(MotivoMovimientoIngrediente.CANCELACION)
+                .cantidad(cantidadRestaurada)
+                .stockAnterior(stockAnterior)
+                .stockNuevo(stockNuevo)
+                .referenciaTipo("PRODUCCION")
                 .referenciaId(referenciaId)
                 .usuario(usuario)
                 .createdAt(LocalDateTime.now())

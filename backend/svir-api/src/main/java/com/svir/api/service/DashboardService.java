@@ -33,7 +33,7 @@ public class DashboardService {
 
         long ingredientesStockBajo = ingredienteRepository.findAll().stream()
                 .filter(Ingrediente::getActivo)
-                .filter(i -> i.getStockMinimo() != null && i.getStock() <= i.getStockMinimo())
+                .filter(i -> i.getStockMinimo() != null && i.getStock().compareTo(i.getStockMinimo()) <= 0)
                 .count();
 
         LocalDateTime inicioHoy = LocalDate.now().atStartOfDay();

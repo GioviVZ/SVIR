@@ -3,6 +3,8 @@ package com.svir.api.dto.ingrediente;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 public class MovimientoIngredienteResponse {
@@ -12,9 +14,9 @@ public class MovimientoIngredienteResponse {
     private String ingredienteNombre;
     private String tipo;
     private String motivo;
-    private Integer cantidad;
-    private Integer stockAnterior;
-    private Integer stockNuevo;
+    private BigDecimal cantidad;
+    private BigDecimal stockAnterior;
+    private BigDecimal stockNuevo;
     private String referenciaTipo;
     private Long referenciaId;
     private String usuarioNombre;
