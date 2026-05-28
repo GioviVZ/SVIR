@@ -7,12 +7,14 @@ import com.svir.api.service.PedidoService;
 import com.svir.api.service.ProduccionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import com.svir.api.dto.pedido.PedidoEstadoUpdateRequest;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/pedidos")
 @RequiredArgsConstructor
@@ -42,7 +44,9 @@ public class PedidoController {
             try {
                 ProduccionResponse prod = produccionService.crearProduccionDesdeVenta(pedido.getId());
                 if (prod != null) pedido.setProduccionId(prod.getId());
-            } catch (RuntimeException ignored) { }
+            } catch (RuntimeException e) {
+                log.error("Error al crear producción desde venta para pedido {}: {}", pedido.getId(), e.getMessage(), e);
+            }
         }
 
         return pedido;

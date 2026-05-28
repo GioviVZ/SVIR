@@ -252,9 +252,8 @@ public class ProduccionService {
             Producto producto = detallePedido.getProducto();
             int faltante = detallePedido.getCantidad() - detallePedido.getCantidadAtendida();
 
+            // Descontar ingredientes si el producto tiene receta configurada
             List<Receta> recetaItems = recetaRepository.findByProductoIdOrderByIdAsc(producto.getId());
-            if (recetaItems.isEmpty()) continue; // sin receta — omitir este producto
-
             for (Receta receta : recetaItems) {
                 BigDecimal cantidadConsumir = receta.getCantidad()
                         .multiply(BigDecimal.valueOf(faltante));
@@ -268,6 +267,7 @@ public class ProduccionService {
                 );
             }
 
+            // Siempre crear el detalle de producción, con o sin receta
             ProduccionDetalle detalle = ProduccionDetalle.builder()
                     .produccion(produccion)
                     .producto(producto)
@@ -278,8 +278,6 @@ public class ProduccionService {
 
             detalles.add(produccionDetalleRepository.save(detalle));
         }
-
-        if (detalles.isEmpty()) return null; // todos los productos sin receta
 
         return toResponse(produccion, detalles);
     }

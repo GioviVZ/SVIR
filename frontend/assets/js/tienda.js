@@ -325,65 +325,79 @@ function renderCatalogo(lista) {
   container.innerHTML = lista.map((p, i) => renderProductoCard(p, i)).join("");
 }
 
-// ── Card de producto (home + catálogo) ────────────────────────────
+// ── Card de producto (home + catálogo) — estilo Instagram ─────────
+
+const _igGradients = [
+  'linear-gradient(145deg, #fbbf24, #ef4444)',
+  'linear-gradient(145deg, #f97316, #ec4899)',
+  'linear-gradient(145deg, #fcd34d, #92400e)',
+  'linear-gradient(145deg, #a78bfa, #ec4899)',
+  'linear-gradient(145deg, #f59e0b, #84cc16)',
+  'linear-gradient(145deg, #fb7185, #f97316)',
+];
 
 function renderProductoCard(producto, idx = 0) {
   _productosMap[producto.id] = producto;
 
-  const nombre = producto.nombre ?? "Producto";
-  const descripcion = producto.descripcion ?? "Delicioso producto artesanal.";
-  const precio = Number(producto.precio ?? 0).toFixed(2);
-  const stock = Number(producto.stock ?? 0);
-  const inicial = nombre.charAt(0).toUpperCase();
-  const sinStock = stock <= 0;
-  const delay = Math.min(idx, 11) * 55;
+  const nombre     = producto.nombre      ?? "Producto";
+  const descripcion= producto.descripcion ?? "Delicioso producto artesanal.";
+  const precio     = Number(producto.precio ?? 0).toFixed(2);
+  const stock      = Number(producto.stock  ?? 0);
+  const inicial    = nombre.charAt(0).toUpperCase();
+  const sinStock   = stock <= 0;
+  const delay      = Math.min(idx, 11) * 55;
+  const grad       = _igGradients[idx % _igGradients.length];
 
-  const badgeStock = sinStock
-    ? `<span class="product-badge-stock low-stock">Sin stock</span>`
+  const badge = sinStock
+    ? `<span class="ig-img-badge no-stock"><i class="bi bi-x-circle me-1"></i>Sin stock</span>`
     : stock <= 5
-      ? `<span class="product-badge-stock low-stock">Últimos ${stock}</span>`
-      : `<span class="product-badge-stock in-stock">Disponible</span>`;
+      ? `<span class="ig-img-badge low-stock">Últimos ${stock}</span>`
+      : `<span class="ig-img-badge in-stock"><i class="bi bi-check2 me-1"></i>Disponible</span>`;
 
-  const imagenHTML = producto.imagenUrl
+  const imgHTML = producto.imagenUrl
     ? `<img src="${API_BASE}${producto.imagenUrl}" alt="${nombre}"
-          class="store-product-img-real${sinStock ? " sin-stock-image" : ""}">`
-    : `<div class="store-product-image premium-product-image${sinStock ? " sin-stock-image" : ""}">
+            class="ig-img-real${sinStock ? ' sin-stock-image' : ''}">`
+    : `<div class="ig-img-placeholder" style="background:${grad}${sinStock ? ';filter:grayscale(55%) opacity(.7)' : ''}">
          <span>${inicial}</span>
        </div>`;
 
   const maxQty = sinStock ? 1 : Math.min(stock, 99);
-  const qtyRowClass = sinStock ? "card-qty-row opacity-50" : "card-qty-row";
-  const btnDecr = sinStock
-    ? '<button class="card-qty-btn" disabled>−</button>'
-    : '<button class="card-qty-btn" onclick="cambiarCantidadCard(' + producto.id + ', -1, ' + stock + ')">−</button>';
-  const btnIncr = sinStock
-    ? '<button class="card-qty-btn" disabled>+</button>'
-    : '<button class="card-qty-btn" onclick="cambiarCantidadCard(' + producto.id + ', 1, ' + stock + ')">+</button>';
-  const btnAdd = sinStock
-    ? '<button class="btn-cart-add sin-stock" disabled><i class="bi bi-x-circle"></i> Sin stock</button>'
-    : '<button class="btn-cart-add" onclick="agregarAlCarrito(_productosMap[' + producto.id + '], parseInt(document.getElementById(\'qty_' + producto.id + '\').value))"><i class="bi bi-cart-plus"></i> Agregar al carrito</button>';
 
-  const compraHTML =
-    '<div class="' + qtyRowClass + '">' +
-      btnDecr +
-      '<input type="number" id="qty_' + producto.id + '" class="card-qty-input" value="1" min="1" max="' + maxQty + '"' + (sinStock ? ' disabled' : '') + '>' +
-      btnIncr +
-    '</div>' + btnAdd;
+  const qtyRow = sinStock
+    ? `<div class="ig-qty-row opacity-50">
+         <button class="ig-qty-btn" disabled>−</button>
+         <input type="number" class="ig-qty-input" value="1" disabled>
+         <button class="ig-qty-btn" disabled>+</button>
+       </div>`
+    : `<div class="ig-qty-row">
+         <button class="ig-qty-btn" onclick="cambiarCantidadCard(${producto.id},-1,${stock})">−</button>
+         <input type="number" id="qty_${producto.id}" class="ig-qty-input" value="1" min="1" max="${maxQty}">
+         <button class="ig-qty-btn" onclick="cambiarCantidadCard(${producto.id},1,${stock})">+</button>
+       </div>`;
+
+  const addBtn = sinStock
+    ? `<button class="btn-ig-add sin-stock" disabled>
+         <i class="bi bi-x-circle"></i> Sin stock
+       </button>`
+    : `<button class="btn-ig-add"
+            onclick="agregarAlCarrito(_productosMap[${producto.id}],parseInt(document.getElementById('qty_${producto.id}').value))">
+         <i class="bi bi-cart-plus"></i> Agregar
+       </button>`;
 
   return `
-    <div class="col-md-6 col-lg-4 col-xl-3 store-card-animate" style="animation-delay:${delay}ms">
-      <div class="store-product-card premium-product-card h-100">
-        <div class="store-product-image-wrap position-relative">
-          ${imagenHTML}
-          <div class="product-floating-badge">${badgeStock}</div>
+    <div class="col-6 col-md-4 col-xl-3 store-card-animate" style="animation-delay:${delay}ms">
+      <div class="ig-product-card">
+        <div class="ig-img-wrap">
+          ${imgHTML}
+          ${badge}
         </div>
-        <div class="p-3 d-flex flex-column flex-fill">
-          <h6 class="fw-bold mb-1">${nombre}</h6>
-          <p class="text-muted flex-grow-1 small mb-2" style="font-size:0.8rem;">${descripcion}</p>
-          <strong class="store-price mb-2">S/ ${precio}</strong>
-          ${compraHTML}
+        <div class="ig-card-body">
+          <div class="ig-product-name">${nombre}</div>
+          <div class="ig-product-desc">${descripcion}</div>
+          <div class="ig-product-price">S/ ${precio}</div>
+          ${qtyRow}
+          ${addBtn}
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
 }

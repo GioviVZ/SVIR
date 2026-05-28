@@ -299,7 +299,7 @@ Cuando hay stock insuficiente, el POS muestra el número de la orden de producci
 El sistema crea la orden automáticamente siguiendo estas reglas:
 
 - Solo se incluyen los productos con cantidad faltante (los que ya se atendieron con stock no entran).
-- Si un producto no tiene receta configurada, se omite de la orden sin cancelar el pedido.
+- Si un producto no tiene receta configurada, igual se incluye en la orden (cocina lo gestiona manualmente), pero no se descuentan ingredientes.
 - Los ingredientes se descuentan en ese momento si hay stock suficiente; si faltan ingredientes, se omite ese descuento y la cocina verá la alerta de stock bajo al revisar.
 - Los pedidos de la tienda web (anónimos) **no** generan producción automática; cocina los gestiona manualmente.
 
@@ -534,6 +534,35 @@ El motivo `CANCELACION` (ENTRADA) se registra cuando una orden de producción es
 ---
 
 ## Historial de cambios relevantes
+
+### Rediseño del login del personal (`index.html`)
+
+La pantalla de login pasó de un formulario centrado simple a un layout de dos columnas:
+
+- **Columna izquierda:** panel de marca con degradado ámbar, logo con efecto glassmorphism y pills descriptivos de las funciones clave del sistema.
+- **Columna derecha:** formulario blanco con inputs con icono, toggle de visibilidad de contraseña y spinner de carga durante el login.
+
+### Rediseño tienda web — estilo Instagram (`home.html`, `catalogo.html`)
+
+La tienda pública recibió un rediseño visual completo:
+
+- **Botones pill:** todos los botones dentro de `.store-body` usan `border-radius: 999px`.
+- **Iconos de categoría al estilo story ring de Instagram:** gradiente ámbar-naranja-rosa con sombra cálida y efecto `scale(1.1)` al hover.
+- **Cards de producto en formato retrato:** relación `4:5` igual que el grid de Instagram. Imágenes reales con `object-fit: cover`; placeholders con gradientes cálidos e inicial del producto.
+- **Grid 2 columnas en mobile:** `col-6 col-md-4 col-xl-3` — misma densidad que la app de Instagram.
+- **Selector de cantidad integrado en la card:** fila pill con botones `+/−` y badge de stock flotante sobre la imagen.
+- **Barra de búsqueda pill** en el catálogo con filtrado en tiempo real por nombre y descripción.
+
+### Corrección: pedidos no generaban orden de producción (`ProduccionService`)
+
+`crearProduccionDesdeVenta` tenía dos bugs que impedían que los pedidos del POS con stock insuficiente llegaran a cocina:
+
+1. **`continue` al no encontrar receta:** si un producto no tenía receta configurada, se saltaba la creación del `ProduccionDetalle`, por lo que ese producto nunca aparecía en la orden de cocina.
+2. **`return null` cuando `detalles` estaba vacío:** si ningún producto tenía receta, `detalles` quedaba vacío y el método retornaba `null` aunque ya había guardado un registro `Produccion` huérfano en la base de datos.
+
+**Fix:** se eliminó el `continue` y el `return null`; ahora se crea siempre el `ProduccionDetalle` para cada producto faltante (el descuento de ingredientes ocurre solo si hay receta configurada).
+
+Adicionalmente, el `catch (RuntimeException ignored) {}` en `PedidoController.crear()` que ocultaba silenciosamente cualquier error se reemplazó por `log.error(...)` para que los errores queden visibles en los logs del backend.
 
 ### Flujo de producción automática desde Ventas
 
