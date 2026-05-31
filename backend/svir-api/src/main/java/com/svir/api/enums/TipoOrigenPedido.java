@@ -4,5 +4,6 @@ public enum TipoOrigenPedido {
     TIENDA,
     PRESENCIAL,
     WHATSAPP,
-    WEB
+    WEB,
+    DELIVERY
 }

@@ -2433,3 +2433,30 @@ body {
   .hero-collage       { height: 340px; max-width: 420px; }
   .hero-collage-main  { height: 290px; }
 }
+
+/* ── Entrega: badge canal DELIVERY ───────────────────────────── */
+.canal-delivery { background: #ede9fe; color: #6d28d9; }
+
+/* ── Entrega: badge estado EN_CAMINO ─────────────────────────── */
+.badge-estado-en-camino { background: #dbeafe; color: #1d4ed8; }
+
+/* ── Modal de tipo de entrega ────────────────────────────────── */
+.entrega-opcion {
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  color: #374151;
+}
+.entrega-opcion:hover {
+  border-color: var(--brand);
+  background: #fff7ed;
+}
+.entrega-opcion.active {
+  border-color: var(--brand);
+  background: #fff7ed;
+  color: var(--brand);
+  font-weight: 700;
+}

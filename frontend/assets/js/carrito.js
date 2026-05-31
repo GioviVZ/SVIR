@@ -73,58 +73,111 @@ function vaciarCarrito() {
   actualizarContadorCarrito();
 }
 
-async function confirmarPedidoWeb() {
-  const carrito = obtenerCarrito();
-  const mensaje = document.getElementById("mensajeCarrito");
+let _tipoEntrega = "recojo";
+let _entregaModal = null;
 
-  mensaje.className = "mt-3 small";
-  mensaje.textContent = "";
+function abrirModalEntrega() {
+  _tipoEntrega = "recojo";
 
+  const btnRecojo   = document.getElementById("btnOpcionRecojo");
+  const btnDelivery = document.getElementById("btnOpcionDelivery");
+  const campos      = document.getElementById("camposDelivery");
+  const msgModal    = document.getElementById("entregaMensaje");
+
+  if (btnRecojo)   btnRecojo.classList.add("active");
+  if (btnDelivery) btnDelivery.classList.remove("active");
+  if (campos)      campos.classList.add("d-none");
+  if (msgModal)    { msgModal.textContent = ""; msgModal.className = "small mb-3"; }
+
+  const el = document.getElementById("entregaModal");
+  if (!el) { console.error("Modal entregaModal no encontrado"); return; }
+
+  _entregaModal = new bootstrap.Modal(el);
+  _entregaModal.show();
+}
+
+function seleccionarEntrega(tipo) {
+  _tipoEntrega = tipo;
+  document.getElementById("btnOpcionRecojo").classList.toggle("active", tipo === "recojo");
+  document.getElementById("btnOpcionDelivery").classList.toggle("active", tipo === "delivery");
+  document.getElementById("camposDelivery").classList.toggle("d-none", tipo !== "delivery");
+  const m = document.getElementById("entregaMensaje");
+  if (m) { m.textContent = ""; m.className = "small mb-3"; }
+}
+
+async function procesarPedidoConEntrega() {
   const clienteWeb = obtenerClienteWeb();
-  if (!clienteWeb) {
-    window.location.href = "home.html?auth=login";
-    return;
-  }
+  const carrito    = obtenerCarrito();
+  const msgModal   = document.getElementById("entregaMensaje");
+  const msgPage    = document.getElementById("mensajeCarrito");
 
   if (carrito.length === 0) {
-    mensaje.className = "mt-3 small text-danger";
-    mensaje.textContent = "Tu carrito está vacío.";
+    msgModal.className = "small mb-3 text-danger";
+    msgModal.textContent = "Tu carrito está vacío.";
     return;
   }
 
-  const observacion = clienteWeb.esInvitado
+  if (!clienteWeb) {
+    msgModal.className = "small mb-3 text-danger";
+    msgModal.innerHTML = `Debes <a href="home.html?auth=login" class="fw-semibold text-danger">iniciar sesión</a> para confirmar tu pedido.`;
+    return;
+  }
+
+  let observacion = clienteWeb.esInvitado
     ? `Invitado: ${clienteWeb.nombre}${clienteWeb.telefono ? " · " + clienteWeb.telefono : ""}`
     : `${clienteWeb.nombre} (DNI: ${clienteWeb.dni})`;
 
+  let tipoOrigen = "WEB";
+
+  if (_tipoEntrega === "delivery") {
+    const dir = (document.getElementById("deliveryDireccion")?.value || "").trim();
+    const tel = (document.getElementById("deliveryTelefono")?.value  || "").trim();
+    const ref = (document.getElementById("deliveryReferencia")?.value || "").trim();
+
+    if (!dir) {
+      msgModal.className = "small mb-3 text-danger";
+      msgModal.textContent = "Ingresa la dirección de entrega.";
+      return;
+    }
+    if (!tel) {
+      msgModal.className = "small mb-3 text-danger";
+      msgModal.textContent = "Ingresa un teléfono de contacto.";
+      return;
+    }
+
+    tipoOrigen  = "DELIVERY";
+    observacion = `Dir: ${dir} | Tel: ${tel}${ref ? " | Ref: " + ref : ""} | ${observacion}`;
+  }
+
   const payload = {
-    tipoOrigen: "WEB",
+    tipoOrigen,
     observacion,
     clienteId: clienteWeb.clienteId || null,
-    detalles: carrito.map(item => ({
-      productoId: item.id,
-      cantidad: item.cantidad
-    }))
+    detalles: carrito.map(item => ({ productoId: item.id, cantidad: item.cantidad }))
   };
 
-  const btn = document.getElementById("btnConfirmar");
+  const btn = document.getElementById("btnConfirmarEntrega");
   if (btn) { btn.disabled = true; btn.textContent = "Procesando..."; }
 
   try {
-    await apiFetch("/api/pedidos", {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
+    await apiFetch("/api/pedidos", { method: "POST", body: JSON.stringify(payload) });
+
+    if (_entregaModal) _entregaModal.hide();
 
     guardarCarrito([]);
     renderCarrito();
     actualizarContadorCarrito();
 
-    mensaje.className = "mt-3 small checkout-result exito";
-    mensaje.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>
-      ¡Pedido registrado! En breve nos comunicamos contigo.`;
+    const esDelivery = _tipoEntrega === "delivery";
+    msgPage.className = "mt-3 small checkout-result exito";
+    msgPage.innerHTML = esDelivery
+      ? `<i class="bi bi-scooter me-1"></i>¡Pedido registrado! Te enviaremos tu pedido a domicilio.`
+      : `<i class="bi bi-check-circle-fill me-1"></i>¡Pedido registrado! Pasa a recogerlo cuando esté listo.`;
+
   } catch (error) {
-    mensaje.className = "mt-3 small checkout-result error";
-    mensaje.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i>
+    if (_entregaModal) _entregaModal.hide();
+    msgPage.className = "mt-3 small checkout-result error";
+    msgPage.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i>
       ${error.message || "No se pudo registrar el pedido."}`;
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = "Confirmar pedido"; }

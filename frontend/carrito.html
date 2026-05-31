@@ -95,7 +95,7 @@
               </div>
 
               <div class="d-grid gap-2">
-                <button id="btnConfirmar" class="btn btn-brand btn-lg" onclick="confirmarPedidoWeb()">
+                <button id="btnConfirmar" class="btn btn-brand btn-lg" onclick="abrirModalEntrega()">
                   <i class="bi bi-bag-check me-2"></i>Confirmar pedido
                 </button>
                 <button class="btn btn-light" onclick="vaciarCarrito()">Vaciar carrito</button>
@@ -108,6 +108,57 @@
       </div>
     </div>
   </section>
+
+  <!-- ── MODAL TIPO DE ENTREGA ─────────────────────────────────── -->
+  <div class="modal fade" id="entregaModal" tabindex="-1" aria-labelledby="entregaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius:20px; overflow:hidden;">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold" id="entregaModalLabel">¿Cómo deseas recibir tu pedido?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body px-4 pb-4">
+
+          <!-- Selector recojo / delivery -->
+          <div class="d-flex gap-3 mb-4">
+            <button id="btnOpcionRecojo" class="entrega-opcion active flex-fill" onclick="seleccionarEntrega('recojo')">
+              <i class="bi bi-shop-window d-block mb-2" style="font-size:1.6rem;"></i>
+              <span class="fw-semibold">Recojo en tienda</span>
+            </button>
+            <button id="btnOpcionDelivery" class="entrega-opcion flex-fill" onclick="seleccionarEntrega('delivery')">
+              <i class="bi bi-scooter d-block mb-2" style="font-size:1.6rem;"></i>
+              <span class="fw-semibold">Delivery</span>
+            </button>
+          </div>
+
+          <!-- Formulario delivery (oculto por defecto) -->
+          <div id="camposDelivery" class="d-none">
+            <div class="mb-3">
+              <label class="form-label fw-semibold small">Dirección de entrega <span class="text-danger">*</span></label>
+              <input id="deliveryDireccion" type="text" class="form-control" placeholder="Ej: Av. Lima 123, Miraflores">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold small">Teléfono de contacto <span class="text-danger">*</span></label>
+              <input id="deliveryTelefono" type="tel" class="form-control" placeholder="Ej: 999 888 777">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold small">Referencia <span class="text-muted fw-normal">(opcional)</span></label>
+              <input id="deliveryReferencia" type="text" class="form-control" placeholder="Ej: Frente al parque, piso 2">
+            </div>
+          </div>
+
+          <!-- Mensaje de error del modal -->
+          <div id="entregaMensaje" class="small mb-3"></div>
+
+          <div class="d-grid">
+            <button id="btnConfirmarEntrega" class="btn btn-brand btn-lg" onclick="procesarPedidoConEntrega()">
+              <i class="bi bi-bag-check me-2"></i>Confirmar pedido
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ── FOOTER ─────────────────────────────────────────────────── -->
   <footer class="store-footer">

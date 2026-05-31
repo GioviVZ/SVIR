@@ -104,14 +104,22 @@ function renderTablaPedidos(lista) {
     return;
   }
 
-  const cancelables = ["PENDIENTE", "PARCIAL", "PREPARACION", "LISTO"];
-  const entregables = ["LISTO"];
+  const cancelables = ["PENDIENTE", "PARCIAL", "PREPARACION", "LISTO", "EN_CAMINO"];
+  const entregables = ["LISTO", "EN_CAMINO"];
 
   tbody.innerHTML = lista.map(p => {
-    const puedeCancel   = cancelables.includes(p.estado);
-    const puedeEntregar = entregables.includes(p.estado);
+    const puedeCancel    = cancelables.includes(p.estado);
+    const puedeEntregar  = entregables.includes(p.estado);
+    const esDelivery     = p.tipoOrigen === "DELIVERY";
+    const puedeEnCamino  = esDelivery && p.estado === "LISTO";
 
-    const btnEntregar = puedeEntregar
+    const btnEnCamino = puedeEnCamino
+      ? `<button class="btn btn-sm btn-warning me-1" onclick="marcarEnCamino(${p.id})">
+           <i class="bi bi-scooter me-1"></i>En camino
+         </button>`
+      : "";
+
+    const btnEntregar = puedeEntregar && !puedeEnCamino
       ? `<button class="btn btn-sm btn-success me-1" onclick="marcarEntregado(${p.id})">
            <i class="bi bi-bag-check me-1"></i>Entregar
          </button>`
@@ -123,14 +131,19 @@ function renderTablaPedidos(lista) {
          </button>`
       : "";
 
-    const acciones = (btnEntregar || btnCancelar)
-      ? `<div class="d-flex gap-1 justify-content-end">${btnEntregar}${btnCancelar}</div>`
+    const acciones = (btnEnCamino || btnEntregar || btnCancelar)
+      ? `<div class="d-flex gap-1 justify-content-end">${btnEnCamino}${btnEntregar}${btnCancelar}</div>`
       : `<span class="text-muted small">—</span>`;
+
+    const clienteInfo = p.clienteNombre ?? (p.observacion ? p.observacion.split('|').pop().trim() : "—");
+    const deliveryInfo = esDelivery && p.observacion
+      ? `<div class="text-muted" style="font-size:0.75rem;">${p.observacion.split('|').slice(0,2).join('|')}</div>`
+      : "";
 
     return `
       <tr>
         <td class="text-muted fw-semibold">#${p.id ?? "-"}</td>
-        <td>${p.clienteNombre ?? p.observacion ?? "—"}</td>
+        <td>${clienteInfo}${deliveryInfo}</td>
         <td>${renderCanal(p.tipoOrigen)}</td>
         <td class="fw-semibold">S/ ${Number(p.total ?? 0).toFixed(2)}</td>
         <td>${renderEstado(p.estado)}</td>
@@ -169,6 +182,7 @@ function renderCanal(origen) {
     TIENDA:     { icon: 'bi-bag-fill',      label: 'Tienda',     cls: 'canal-tienda'    },
     WHATSAPP:   { icon: 'bi-whatsapp',      label: 'WhatsApp',   cls: 'canal-whatsapp'  },
     WEB:        { icon: 'bi-globe',         label: 'Web',        cls: 'canal-web'       },
+    DELIVERY:   { icon: 'bi-scooter',       label: 'Delivery',   cls: 'canal-delivery'  },
   };
   const { icon, label, cls } = mapa[origen] ?? { icon: 'bi-question-circle', label: origen ?? '—', cls: '' };
   return `<span class="badge-canal ${cls}"><i class="bi ${icon} me-1"></i>${label}</span>`;
@@ -180,11 +194,25 @@ function renderEstado(estado) {
     PARCIAL:     ['badge-estado-parcial',     'Parcial'],
     PREPARACION: ['badge-estado-preparacion', 'En preparación'],
     LISTO:       ['badge-estado-listo',       'Listo'],
+    EN_CAMINO:   ['badge-estado-en-camino',   'En camino'],
     ENTREGADO:   ['badge-estado-entregado',   'Entregado'],
     CANCELADO:   ['badge-estado-cancelado',   'Cancelado'],
   };
   const [cls, label] = mapa[estado] ?? ['badge-estado-entregado', estado ?? '—'];
   return `<span class="badge-estado ${cls}">${label}</span>`;
+}
+
+async function marcarEnCamino(id) {
+  if (!confirm(`¿Marcar el pedido #${id} como "En camino"?`)) return;
+  try {
+    await apiFetch(`/api/pedidos/${id}/estado`, {
+      method: "PATCH",
+      body: JSON.stringify({ estado: "EN_CAMINO" })
+    });
+    await cargarPedidos();
+  } catch (error) {
+    alert(error.message || "No se pudo actualizar el estado.");
+  }
 }
 
 async function marcarEntregado(id) {
