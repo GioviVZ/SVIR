@@ -1,7 +1,8 @@
 const ROL_ACCESO = {
-  ADMIN:  ['dashboard.html','productos.html','ingredientes.html','recetas.html','pedidos.html','produccion.html','pos.html','movimientos.html','usuarios.html','clientes.html'],
-  VENTAS: ['pos.html','productos.html','pedidos.html','movimientos.html','clientes.html'],
-  COCINA: ['produccion.html','ingredientes.html','recetas.html','movimientos.html']
+  ADMIN:       ['dashboard.html','productos.html','ingredientes.html','recetas.html','pedidos.html','produccion.html','pos.html','movimientos.html','usuarios.html','clientes.html','repartidor.html'],
+  VENTAS:      ['pos.html','productos.html','pedidos.html','movimientos.html','clientes.html'],
+  COCINA:      ['produccion.html','ingredientes.html','recetas.html','movimientos.html'],
+  REPARTIDOR:  ['repartidor.html']
 };
 
 function getLoggedUser() {
@@ -19,7 +20,7 @@ function renderUserInfo() {
   const el = document.getElementById("userInfo");
   if (!el) return;
   if (user) {
-    const rolLabel = { ADMIN: 'Admin', VENTAS: 'Ventas', COCINA: 'Cocina' };
+    const rolLabel = { ADMIN: 'Admin', VENTAS: 'Ventas', COCINA: 'Cocina', REPARTIDOR: 'Repartidor' };
     el.textContent = (user.nombre ?? 'Usuario') + ' · ' + (rolLabel[user.rol] ?? user.rol ?? '');
   }
 }
@@ -62,7 +63,7 @@ function verificarAccesoPagina() {
 
   const permitidos = ROL_ACCESO[rol] ?? [];
   if (!permitidos.includes(pagina)) {
-    const home = { ADMIN: 'dashboard.html', VENTAS: 'pos.html', COCINA: 'produccion.html' };
+    const home = { ADMIN: 'dashboard.html', VENTAS: 'pos.html', COCINA: 'produccion.html', REPARTIDOR: 'repartidor.html' };
     window.location.href = home[rol] || 'dashboard.html';
   }
 }

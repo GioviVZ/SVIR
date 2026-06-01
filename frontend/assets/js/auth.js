@@ -21,7 +21,7 @@ async function login(username, password) {
   localStorage.setItem("token", data.token);
   localStorage.setItem("user", JSON.stringify(data));
 
-  const homeByRol = { ADMIN: 'dashboard.html', VENTAS: 'pos.html', COCINA: 'produccion.html' };
+  const homeByRol = { ADMIN: 'dashboard.html', VENTAS: 'pos.html', COCINA: 'produccion.html', REPARTIDOR: 'repartidor.html' };
   window.location.href = homeByRol[data.rol] || 'dashboard.html';
 }
 

@@ -21,6 +21,13 @@ const ROLES = [
     desc: 'Producción, recetas e ingredientes',
     icon: 'bi-fire',
     cls: 'cocina'
+  },
+  {
+    key: 'REPARTIDOR',
+    label: 'Repartidores',
+    desc: 'Gestión de entregas a domicilio',
+    icon: 'bi-scooter',
+    cls: 'repartidor'
   }
 ];
 
@@ -44,30 +51,31 @@ function renderUsuarios(lista) {
 
   container.innerHTML = ROLES.map(rol => {
     const users = lista.filter(u => u.rol === rol.key);
-    if (users.length === 0) return '';
 
-    const usersHTML = users.map(u => {
-      const inicial = (u.nombre || '?').charAt(0).toUpperCase();
-      const estadoBadge = u.activo
-        ? '<span class="badge bg-success-subtle text-success-emphasis">Activo</span>'
-        : '<span class="badge bg-danger-subtle text-danger-emphasis">Inactivo</span>';
-      const btnEstado = u.activo
-        ? '<button class="btn btn-sm btn-outline-danger" onclick="toggleActivo(' + u.id + ', true)">Desactivar</button>'
-        : '<button class="btn btn-sm btn-outline-success" onclick="toggleActivo(' + u.id + ', false)">Activar</button>';
+    const usersHTML = users.length === 0
+      ? '<div class="text-muted text-center py-3" style="font-size:0.85rem;">Sin usuarios registrados en este rol</div>'
+      : users.map(u => {
+          const inicial = (u.nombre || '?').charAt(0).toUpperCase();
+          const estadoBadge = u.activo
+            ? '<span class="badge bg-success-subtle text-success-emphasis">Activo</span>'
+            : '<span class="badge bg-danger-subtle text-danger-emphasis">Inactivo</span>';
+          const btnEstado = u.activo
+            ? '<button class="btn btn-sm btn-outline-danger" onclick="toggleActivo(' + u.id + ', true)">Desactivar</button>'
+            : '<button class="btn btn-sm btn-outline-success" onclick="toggleActivo(' + u.id + ', false)">Activar</button>';
 
-      return '<div class="user-card">' +
-        '<div class="user-avatar user-avatar-' + rol.cls + '">' + inicial + '</div>' +
-        '<div class="flex-grow-1 min-width-0">' +
-          '<div class="fw-semibold text-truncate">' + u.nombre + '</div>' +
-          '<div class="text-muted text-truncate" style="font-size:0.78rem;">' + u.email + '</div>' +
-        '</div>' +
-        '<div class="d-flex align-items-center gap-2 flex-shrink-0">' +
-          estadoBadge +
-          '<button class="btn btn-sm btn-outline-secondary" onclick="editarUsuario(' + u.id + ')"><i class="bi bi-pencil"></i></button>' +
-          btnEstado +
-        '</div>' +
-      '</div>';
-    }).join('');
+          return '<div class="user-card">' +
+            '<div class="user-avatar user-avatar-' + rol.cls + '">' + inicial + '</div>' +
+            '<div class="flex-grow-1 min-width-0">' +
+              '<div class="fw-semibold text-truncate">' + u.nombre + '</div>' +
+              '<div class="text-muted text-truncate" style="font-size:0.78rem;">' + u.email + '</div>' +
+            '</div>' +
+            '<div class="d-flex align-items-center gap-2 flex-shrink-0">' +
+              estadoBadge +
+              '<button class="btn btn-sm btn-outline-secondary" onclick="editarUsuario(' + u.id + ')"><i class="bi bi-pencil"></i></button>' +
+              btnEstado +
+            '</div>' +
+          '</div>';
+        }).join('');
 
     const count = users.length;
 

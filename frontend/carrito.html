@@ -145,6 +145,15 @@
               <label class="form-label fw-semibold small">Referencia <span class="text-muted fw-normal">(opcional)</span></label>
               <input id="deliveryReferencia" type="text" class="form-control" placeholder="Ej: Frente al parque, piso 2">
             </div>
+            <!-- Ubicación GPS -->
+            <div class="mb-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="capturarUbicacion()">
+                <i class="bi bi-geo-alt me-1"></i>Marcar mi ubicación actual
+              </button>
+            </div>
+            <div id="gpsEstado" class="small text-muted mb-1 d-none"></div>
+            <input type="hidden" id="deliveryLat">
+            <input type="hidden" id="deliveryLng">
           </div>
 
           <!-- Mensaje de error del modal -->

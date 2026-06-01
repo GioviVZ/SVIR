@@ -4,6 +4,7 @@ import com.svir.api.dto.pedido.*;
 import com.svir.api.entity.*;
 import com.svir.api.enums.EstadoDetallePedido;
 import com.svir.api.enums.EstadoPedido;
+import com.svir.api.enums.TipoOrigenPedido;
 import com.svir.api.repository.*;
 import com.svir.api.dto.pedido.PedidoEstadoUpdateRequest;
 import com.svir.api.exception.BusinessException;
@@ -140,6 +141,19 @@ public class PedidoService {
             List<DetallePedido> detalles = detallePedidoRepository.findByPedidoIdOrderByIdAsc(pedido.getId());
             boolean requiereProduccion = detalles.stream().anyMatch(d -> d.getCantidadAtendida() < d.getCantidad());
             return toResponse(pedido, detalles, requiereProduccion);
+        }).toList();
+    }
+
+    public List<PedidoResponse> listarDeliveryActivos() {
+        List<Pedido> activos = pedidoRepository.findActivosByTipoOrigen(TipoOrigenPedido.DELIVERY);
+        List<Pedido> entregadosHoy = pedidoRepository.findByTipoOrigenAndEstadoAndCreatedAtAfter(
+                TipoOrigenPedido.DELIVERY, EstadoPedido.ENTREGADO,
+                LocalDateTime.now().toLocalDate().atStartOfDay());
+        List<Pedido> todos = new ArrayList<>(activos);
+        todos.addAll(entregadosHoy);
+        return todos.stream().map(pedido -> {
+            List<DetallePedido> detalles = detallePedidoRepository.findByPedidoIdOrderByIdAsc(pedido.getId());
+            return toResponse(pedido, detalles, false);
         }).toList();
     }
 

@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8080";
+const API_BASE = `http://${window.location.hostname}:8080`;
 
 function getToken() {
   return localStorage.getItem("token");

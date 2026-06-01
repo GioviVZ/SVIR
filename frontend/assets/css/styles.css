@@ -1665,9 +1665,10 @@ body {
   margin-bottom: 10px;
 }
 
-.role-section-header.role-admin  { background: linear-gradient(135deg, #fff7ed, #fef3c7); border-left: 4px solid #d97706; }
-.role-section-header.role-ventas { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-left: 4px solid #2563eb; }
-.role-section-header.role-cocina { background: linear-gradient(135deg, #fef2f2, #fee2e2); border-left: 4px solid #dc2626; }
+.role-section-header.role-admin      { background: linear-gradient(135deg, #fff7ed, #fef3c7); border-left: 4px solid #d97706; }
+.role-section-header.role-ventas     { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-left: 4px solid #2563eb; }
+.role-section-header.role-cocina     { background: linear-gradient(135deg, #fef2f2, #fee2e2); border-left: 4px solid #dc2626; }
+.role-section-header.role-repartidor { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-left: 4px solid #16a34a; }
 
 .role-section-icon {
   width: 42px;
@@ -1681,9 +1682,10 @@ body {
   flex-shrink: 0;
 }
 
-.role-admin  .role-section-icon { background: #d97706; }
-.role-ventas .role-section-icon { background: #2563eb; }
-.role-cocina .role-section-icon { background: #dc2626; }
+.role-admin       .role-section-icon { background: #d97706; }
+.role-ventas      .role-section-icon { background: #2563eb; }
+.role-cocina      .role-section-icon { background: #dc2626; }
+.role-repartidor  .role-section-icon { background: #16a34a; }
 
 .role-section-desc {
   font-size: 0.76rem;
@@ -1735,9 +1737,10 @@ body {
   flex-shrink: 0;
 }
 
-.user-avatar-admin  { background: #fff7ed; color: #d97706; }
-.user-avatar-ventas { background: #eff6ff; color: #2563eb; }
-.user-avatar-cocina { background: #fef2f2; color: #dc2626; }
+.user-avatar-admin      { background: #fff7ed; color: #d97706; }
+.user-avatar-ventas     { background: #eff6ff; color: #2563eb; }
+.user-avatar-cocina     { background: #fef2f2; color: #dc2626; }
+.user-avatar-repartidor { background: #f0fdf4; color: #16a34a; }
 
 /* ── Dashboard: animaciones y componentes ─────────────────────────────────── */
 

@@ -67,6 +67,7 @@
             <div class="sidebar-sub">
               <a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
               <a class="nav-link" href="usuarios.html"><i class="bi bi-person-gear"></i> Usuarios</a>
+              <a class="nav-link" href="repartidor.html"><i class="bi bi-scooter"></i> Panel Repartidores</a>
             </div>
           </div>
         </div>
@@ -83,8 +84,11 @@
 
       <div class="d-flex gap-2 align-items-center">
         <span id="userInfo" class="small text-muted"></span>
-        <button class="btn btn-brand" data-bs-toggle="modal" data-bs-target="#usuarioModal" onclick="prepararNuevo()">
-          Nuevo usuario
+        <a href="repartidor.html" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-scooter me-1"></i>Panel Repartidores
+        </a>
+        <button class="btn btn-brand btn-sm" data-bs-toggle="modal" data-bs-target="#usuarioModal" onclick="prepararNuevo()">
+          <i class="bi bi-plus-lg me-1"></i>Nuevo usuario
         </button>
         <button class="btn btn-outline-danger btn-sm" onclick="logout()">Salir</button>
       </div>
@@ -145,6 +149,7 @@
               <option value="ADMIN">Administrador</option>
               <option value="VENTAS">Ventas</option>
               <option value="COCINA">Cocina</option>
+              <option value="REPARTIDOR">Repartidor</option>
             </select>
           </div>
         </div>

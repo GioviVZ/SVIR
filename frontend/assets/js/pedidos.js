@@ -136,9 +136,17 @@ function renderTablaPedidos(lista) {
       : `<span class="text-muted small">—</span>`;
 
     const clienteInfo = p.clienteNombre ?? (p.observacion ? p.observacion.split('|').pop().trim() : "—");
-    const deliveryInfo = esDelivery && p.observacion
-      ? `<div class="text-muted" style="font-size:0.75rem;">${p.observacion.split('|').slice(0,2).join('|')}</div>`
-      : "";
+    let deliveryInfo = "";
+    if (esDelivery && p.observacion) {
+      const partes = p.observacion.split('|').map(s => s.trim());
+      const dirPart = partes.find(s => s.startsWith("Dir:")) ?? "";
+      const telPart = partes.find(s => s.startsWith("Tel:")) ?? "";
+      const gpsPart = partes.find(s => s.startsWith("GPS:"));
+      const mapsLink = gpsPart
+        ? ` <a href="https://maps.google.com/?q=${gpsPart.replace("GPS:", "").trim()}" target="_blank" title="Ver en mapa" style="color:#6d28d9;"><i class="bi bi-geo-alt-fill"></i></a>`
+        : "";
+      deliveryInfo = `<div class="text-muted" style="font-size:0.75rem;">${dirPart}${telPart ? " | " + telPart : ""}${mapsLink}</div>`;
+    }
 
     return `
       <tr>

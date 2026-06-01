@@ -2,6 +2,7 @@ package com.svir.api.repository;
 
 import com.svir.api.entity.Pedido;
 import com.svir.api.enums.EstadoPedido;
+import com.svir.api.enums.TipoOrigenPedido;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +22,10 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     BigDecimal sumTotalByPeriod(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
     List<Pedido> findTop5ByOrderByCreatedAtDesc();
+
+    @Query("SELECT p FROM Pedido p WHERE p.tipoOrigen = :origen AND p.estado NOT IN (com.svir.api.enums.EstadoPedido.CANCELADO, com.svir.api.enums.EstadoPedido.ENTREGADO) ORDER BY p.createdAt DESC")
+    List<Pedido> findActivosByTipoOrigen(@Param("origen") TipoOrigenPedido origen);
+
+    @Query("SELECT p FROM Pedido p WHERE p.tipoOrigen = :origen AND p.estado = :estado AND p.createdAt >= :desde ORDER BY p.createdAt DESC")
+    List<Pedido> findByTipoOrigenAndEstadoAndCreatedAtAfter(@Param("origen") TipoOrigenPedido origen, @Param("estado") EstadoPedido estado, @Param("desde") LocalDateTime desde);
 }

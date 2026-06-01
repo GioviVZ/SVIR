@@ -14,7 +14,7 @@ CREATE TABLE `usuarios` (
   `nombre`        VARCHAR(100)   NOT NULL,
   `email`         VARCHAR(120)   NOT NULL,
   `password_hash` VARCHAR(255)   NOT NULL,
-  `rol`           ENUM('ADMIN','VENTAS','COCINA') NOT NULL,
+  `rol`           ENUM('ADMIN','VENTAS','COCINA','REPARTIDOR') NOT NULL,
   `activo`        TINYINT(1)     NOT NULL DEFAULT 1,
   `created_at`    TIMESTAMP      NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`    TIMESTAMP      NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

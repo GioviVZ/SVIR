@@ -89,11 +89,56 @@ function abrirModalEntrega() {
   if (campos)      campos.classList.add("d-none");
   if (msgModal)    { msgModal.textContent = ""; msgModal.className = "small mb-3"; }
 
+  const clienteWeb = obtenerClienteWeb();
+  if (clienteWeb?.telefono) {
+    const inputTel = document.getElementById("deliveryTelefono");
+    if (inputTel && !inputTel.value) inputTel.value = clienteWeb.telefono;
+  }
+
+  // Limpiar GPS previo al reabrir
+  const latEl = document.getElementById("deliveryLat");
+  const lngEl = document.getElementById("deliveryLng");
+  const gpsEl = document.getElementById("gpsEstado");
+  if (latEl) latEl.value = "";
+  if (lngEl) lngEl.value = "";
+  if (gpsEl) { gpsEl.textContent = ""; gpsEl.className = "small text-muted mb-1 d-none"; }
+
   const el = document.getElementById("entregaModal");
   if (!el) { console.error("Modal entregaModal no encontrado"); return; }
 
   _entregaModal = new bootstrap.Modal(el);
   _entregaModal.show();
+}
+
+function capturarUbicacion() {
+  const gpsEl = document.getElementById("gpsEstado");
+  const latEl = document.getElementById("deliveryLat");
+  const lngEl = document.getElementById("deliveryLng");
+
+  gpsEl.className = "small text-muted mb-1";
+  gpsEl.textContent = "Obteniendo ubicación...";
+
+  if (!navigator.geolocation) {
+    gpsEl.className = "small text-warning mb-1";
+    gpsEl.textContent = "Tu navegador no soporta GPS. Ingresa la dirección manualmente.";
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      latEl.value = lat;
+      lngEl.value = lng;
+      gpsEl.className = "small mb-1";
+      gpsEl.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i>Ubicación marcada · <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" class="text-success fw-semibold">Ver en mapa</a>`;
+    },
+    () => {
+      gpsEl.className = "small text-warning mb-1";
+      gpsEl.textContent = "No se pudo obtener el GPS. Ingresa la dirección manualmente.";
+    },
+    { timeout: 8000 }
+  );
 }
 
 function seleccionarEntrega(tipo) {
@@ -146,7 +191,10 @@ async function procesarPedidoConEntrega() {
     }
 
     tipoOrigen  = "DELIVERY";
-    observacion = `Dir: ${dir} | Tel: ${tel}${ref ? " | Ref: " + ref : ""} | ${observacion}`;
+    const lat = document.getElementById("deliveryLat")?.value;
+    const lng = document.getElementById("deliveryLng")?.value;
+    const coordsPart = (lat && lng) ? ` | GPS: ${lat},${lng}` : "";
+    observacion = `Dir: ${dir} | Tel: ${tel}${ref ? " | Ref: " + ref : ""}${coordsPart} | ${observacion}`;
   }
 
   const payload = {

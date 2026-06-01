@@ -28,6 +28,11 @@ public class PedidoController {
         return pedidoService.listar();
     }
 
+    @GetMapping("/delivery")
+    public List<PedidoResponse> listarDelivery() {
+        return pedidoService.listarDeliveryActivos();
+    }
+
     @GetMapping("/{id}")
     public PedidoResponse obtener(@PathVariable Long id) {
         return pedidoService.obtener(id);
