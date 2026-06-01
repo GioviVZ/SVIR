@@ -100,6 +100,8 @@ public class IngredienteService {
 
         Usuario usuario = getUsuarioAutenticado();
 
+        String referenciaTipo = request.getReferenciaTipo() != null ? request.getReferenciaTipo() : "MANUAL";
+
         MovimientoIngrediente movimiento = MovimientoIngrediente.builder()
                 .ingrediente(ingrediente)
                 .tipo(request.getTipo())
@@ -107,7 +109,7 @@ public class IngredienteService {
                 .cantidad(request.getCantidad())
                 .stockAnterior(stockAnterior)
                 .stockNuevo(stockNuevo)
-                .referenciaTipo(request.getReferenciaTipo())
+                .referenciaTipo(referenciaTipo)
                 .referenciaId(request.getReferenciaId())
                 .usuario(usuario)
                 .createdAt(LocalDateTime.now())

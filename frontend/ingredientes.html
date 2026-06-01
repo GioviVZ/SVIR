@@ -171,10 +171,66 @@
     </div>
   </div>
 
+  <!-- ── MODAL MOVIMIENTO DE STOCK ──────────────────────────── -->
+  <div class="modal fade" id="movimientoStockModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4">
+        <div class="modal-header" id="movimientoHeader">
+          <h5 class="modal-title fw-bold" id="movimientoTitulo">Movimiento de stock</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body px-4 pb-2">
+          <input type="hidden" id="movimientoIngredienteId">
+          <input type="hidden" id="movimientoTipo">
+
+          <div class="mb-3 p-3 rounded-3" style="background:#f9fafb;">
+            <div class="text-muted small mb-1">Ingrediente</div>
+            <div class="fw-semibold" id="movimientoNombre"></div>
+            <div class="text-muted small" id="movimientoUnidad"></div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Cantidad <span class="text-danger">*</span></label>
+            <input type="number" id="movimientoCantidad" class="form-control" step="0.01" min="0.01" placeholder="Ej: 2.5">
+          </div>
+
+          <!-- Solo visible en modo reducción -->
+          <div id="motivoWrap" class="mb-3 d-none">
+            <label class="form-label fw-semibold">Motivo <span class="text-danger">*</span></label>
+            <select id="movimientoMotivo" class="form-select">
+              <option value="MERMA">Merma / caducidad</option>
+              <option value="AJUSTE_MANUAL">Ajuste manual</option>
+            </select>
+          </div>
+
+          <!-- Advertencia con confirmación para reducciones -->
+          <div id="confirmacionReduccion" class="d-none mb-3">
+            <div class="alert alert-warning py-2 px-3 mb-2" style="border-radius:10px; font-size:.85rem;">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>
+              Esta acción <strong>reducirá el stock permanentemente</strong> y quedará registrada en el historial.
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="checkConfirmarReduccion">
+              <label class="form-check-label small" for="checkConfirmarReduccion">
+                Confirmo que el ingrediente está dañado o malogrado
+              </label>
+            </div>
+          </div>
+
+          <div id="movimientoMensaje" class="small mb-2"></div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" id="btnEjecutarMovimiento" class="btn" onclick="ejecutarMovimientoStock()">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/ui.js"></script>
-  <script src="assets/js/ingredientes.js"></script>
+  <script src="assets/js/ingredientes.js?v=2"></script>
 </body>
 </html>

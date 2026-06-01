@@ -1,10 +1,12 @@
 requireAuth();
 
 let ingredienteModal;
+let movimientoStockModal;
 let ingredientesData = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
-  ingredienteModal = new bootstrap.Modal(document.getElementById("ingredienteModal"));
+  ingredienteModal    = new bootstrap.Modal(document.getElementById("ingredienteModal"));
+  movimientoStockModal = new bootstrap.Modal(document.getElementById("movimientoStockModal"));
 
   document.getElementById("ingredienteForm").addEventListener("submit", guardarIngrediente);
   document.getElementById("buscarIngrediente").addEventListener("input", filtrarIngredientes);
@@ -48,7 +50,15 @@ function renderTablaIngredientes(lista) {
         <td>${i.unidadMedida ?? ""}</td>
         <td>${estado}</td>
         <td class="text-end">
-          <button class="btn btn-sm btn-outline-primary me-2" onclick='editarIngrediente(${JSON.stringify(i)})'>Editar</button>
+          <button class="btn btn-sm btn-outline-success me-1" title="Agregar stock"
+            onclick="abrirMovimientoStock(${i.id}, '${(i.nombre??'').replace(/'/g,"\\'")}', '${i.unidadMedida??''}', 'ENTRADA')">
+            <i class="bi bi-plus-lg"></i> Stock
+          </button>
+          <button class="btn btn-sm btn-outline-warning me-1" title="Reducir / merma"
+            onclick="abrirMovimientoStock(${i.id}, '${(i.nombre??'').replace(/'/g,"\\'")}', '${i.unidadMedida??''}', 'SALIDA')">
+            <i class="bi bi-dash-lg"></i> Merma
+          </button>
+          <button class="btn btn-sm btn-outline-primary me-1" onclick='editarIngrediente(${JSON.stringify(i)})'>Editar</button>
           <button class="btn btn-sm btn-outline-danger" onclick="eliminarIngrediente(${i.id})">Eliminar</button>
         </td>
       </tr>
@@ -140,4 +150,79 @@ async function eliminarIngrediente(id) {
 function limpiarFormularioIngrediente() {
   document.getElementById("ingredienteForm").reset();
   document.getElementById("ingredienteId").value = "";
+}
+
+// ── Movimientos de stock (agregar / merma) ─────────────────────────
+
+function abrirMovimientoStock(id, nombre, unidad, tipo) {
+  const esEntrada = tipo === "ENTRADA";
+
+  document.getElementById("movimientoIngredienteId").value = id;
+  document.getElementById("movimientoTipo").value          = tipo;
+  document.getElementById("movimientoNombre").textContent  = nombre;
+  document.getElementById("movimientoUnidad").textContent  = unidad;
+  document.getElementById("movimientoCantidad").value      = "";
+  document.getElementById("movimientoMensaje").textContent = "";
+  document.getElementById("movimientoMensaje").className   = "small mb-2";
+
+  document.getElementById("movimientoTitulo").textContent = esEntrada ? "Agregar stock" : "Reducir stock / Merma";
+  document.getElementById("movimientoHeader").style.background = esEntrada ? "#f0fdf4" : "#fff7ed";
+  document.getElementById("motivoWrap").classList.toggle("d-none", esEntrada);
+  document.getElementById("confirmacionReduccion").classList.toggle("d-none", esEntrada);
+
+  const btn = document.getElementById("btnEjecutarMovimiento");
+  btn.className = `btn ${esEntrada ? "btn-success" : "btn-warning"}`;
+  btn.textContent = esEntrada ? "Agregar" : "Reducir";
+
+  if (!esEntrada) {
+    document.getElementById("movimientoMotivo").value          = "MERMA";
+    document.getElementById("checkConfirmarReduccion").checked = false;
+  }
+
+  movimientoStockModal.show();
+}
+
+async function ejecutarMovimientoStock() {
+  const id      = document.getElementById("movimientoIngredienteId").value;
+  const tipo    = document.getElementById("movimientoTipo").value;
+  const cantidad = parseFloat(document.getElementById("movimientoCantidad").value);
+  const msg     = document.getElementById("movimientoMensaje");
+
+  if (!cantidad || cantidad <= 0) {
+    msg.className = "small mb-2 text-danger";
+    msg.textContent = "Ingresa una cantidad válida mayor a 0.";
+    return;
+  }
+
+  const esEntrada = tipo === "ENTRADA";
+  const motivo    = esEntrada ? "COMPRA" : document.getElementById("movimientoMotivo").value;
+
+  if (!esEntrada) {
+    const confirmado = document.getElementById("checkConfirmarReduccion").checked;
+    if (!confirmado) {
+      msg.className = "small mb-2 text-danger";
+      msg.textContent = "Debes marcar la confirmación para continuar.";
+      return;
+    }
+  }
+
+  const btn = document.getElementById("btnEjecutarMovimiento");
+  btn.disabled = true;
+  btn.textContent = "Guardando...";
+
+  try {
+    await apiFetch(`/api/ingredientes/${id}/movimientos`, {
+      method: "POST",
+      body: JSON.stringify({ tipo, motivo, cantidad })
+    });
+
+    movimientoStockModal.hide();
+    await cargarIngredientes();
+  } catch (error) {
+    msg.className = "small mb-2 text-danger";
+    msg.textContent = error.message || "No se pudo registrar el movimiento.";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = esEntrada ? "Agregar" : "Reducir";
+  }
 }
