@@ -1,5 +1,5 @@
 async function login(username, password) {
-  const response = await fetch("http://localhost:8080/api/auth/login", {
+  const response = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

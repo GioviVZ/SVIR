@@ -1,4 +1,10 @@
-const API_BASE = `http://${window.location.hostname}:8080`;
+const API_BASE = (() => {
+  const h = window.location.hostname;
+  if (h.includes('devtunnels.ms')) {
+    return `${window.location.protocol}//${h.replace(/-\d+\.brs\./, '-8080.brs.')}`;
+  }
+  return `http://${h}:8080`;
+})();
 
 function getToken() {
   return localStorage.getItem("token");
