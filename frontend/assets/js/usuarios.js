@@ -63,6 +63,10 @@ function renderUsuarios(lista) {
             ? '<button class="btn btn-sm btn-outline-danger" onclick="toggleActivo(' + u.id + ', true)">Desactivar</button>'
             : '<button class="btn btn-sm btn-outline-success" onclick="toggleActivo(' + u.id + ', false)">Activar</button>';
 
+          const btnWsp = u.telefono
+            ? '<button class="btn btn-sm btn-outline-success" onclick="enviarClaveTemporalWsp(' + u.id + ')" title="Enviar clave temporal por WhatsApp"><i class="bi bi-whatsapp"></i></button>'
+            : '';
+
           return '<div class="user-card">' +
             '<div class="user-avatar user-avatar-' + rol.cls + '">' + inicial + '</div>' +
             '<div class="flex-grow-1 min-width-0">' +
@@ -72,6 +76,7 @@ function renderUsuarios(lista) {
             '<div class="d-flex align-items-center gap-2 flex-shrink-0">' +
               estadoBadge +
               '<button class="btn btn-sm btn-outline-secondary" onclick="editarUsuario(' + u.id + ')"><i class="bi bi-pencil"></i></button>' +
+              btnWsp +
               btnEstado +
             '</div>' +
           '</div>';
@@ -99,6 +104,9 @@ function prepararNuevo() {
   document.getElementById('usuarioId').value = '';
   document.getElementById('passwordHint').style.display = 'none';
   document.getElementById('passwordUsuario').required = true;
+  document.getElementById('telefonoUsuario').value = '';
+  document.getElementById('preguntaUsuario').value = '';
+  document.getElementById('respuestaUsuario').value = '';
 }
 
 function editarUsuario(id) {
@@ -113,8 +121,24 @@ function editarUsuario(id) {
   document.getElementById('passwordUsuario').required = false;
   document.getElementById('passwordHint').style.display = '';
   document.getElementById('rolUsuario').value = u.rol;
+  document.getElementById('telefonoUsuario').value = u.telefono || '';
+  document.getElementById('preguntaUsuario').value = u.preguntaSeguridad || '';
+  document.getElementById('respuestaUsuario').value = '';
 
   new bootstrap.Modal(document.getElementById('usuarioModal')).show();
+}
+
+async function enviarClaveTemporalWsp(id) {
+  try {
+    const data = await apiFetch('/api/usuarios/' + id + '/generar-clave-temporal', { method: 'POST' });
+    const tel = (data.telefono || '').replace(/\D/g, '');
+    const msg = encodeURIComponent(
+      'Hola ' + data.nombre + ', tu nueva contraseña temporal de SVIR es: *' + data.tempPassword + '*\nCámbiala después de ingresar.'
+    );
+    window.open('https://wa.me/' + tel + '?text=' + msg, '_blank');
+  } catch (e) {
+    alert(e.message);
+  }
 }
 
 async function toggleActivo(id, activo) {
@@ -143,8 +167,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!id && !password) { alert('La contraseña es obligatoria al crear un usuario.'); return; }
     if (password && password.length < 6) { alert('La contraseña debe tener al menos 6 caracteres.'); return; }
 
-    const payload = { nombre, email, rol, activo: true };
+    const telefono  = document.getElementById('telefonoUsuario').value.trim();
+    const pregunta  = document.getElementById('preguntaUsuario').value;
+    const respuesta = document.getElementById('respuestaUsuario').value.trim();
+
+    const payload = { nombre, email, rol, activo: true, telefono: telefono || null };
     if (password) payload.password = password;
+    if (pregunta) payload.preguntaSeguridad = pregunta;
+    if (respuesta) payload.respuestaSeguridad = respuesta;
 
     try {
       if (id) {

@@ -35,6 +35,15 @@ public class Usuario {
     @Column(nullable = false)
     private Boolean activo;
 
+    @Column(length = 20)
+    private String telefono;
+
+    @Column(name = "pregunta_seguridad", length = 255)
+    private String preguntaSeguridad;
+
+    @Column(name = "respuesta_seguridad", length = 255)
+    private String respuestaSeguridad;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -98,7 +98,7 @@
   <footer class="store-footer">
     <div class="container text-center">
       <span class="text-muted small">© 2026 Dulce Momento ·
-        <a href="index.html" class="text-muted text-decoration-none">Acceso personal</a>
+        <a href="login.html" class="text-muted text-decoration-none">Acceso personal</a>
       </span>
     </div>
   </footer>
@@ -216,6 +216,25 @@
                   <input type="password" id="regPasswordConfirm" class="form-control"
                     placeholder="Repite tu contraseña" maxlength="100">
                 </div>
+                <div class="col-12 mt-1">
+                  <hr class="my-2">
+                  <p class="small text-muted mb-2"><i class="bi bi-shield-lock me-1"></i>Pregunta de seguridad <span class="fw-normal">(para recuperar tu cuenta)</span></p>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Pregunta</label>
+                  <select id="regPregunta" class="form-select">
+                    <option value="">Sin pregunta de seguridad</option>
+                    <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
+                    <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+                    <option value="¿Cuál es el nombre de tu madre?">¿Cuál es el nombre de tu madre?</option>
+                    <option value="¿Cuál fue tu primer trabajo?">¿Cuál fue tu primer trabajo?</option>
+                    <option value="¿Cuál es tu comida favorita?">¿Cuál es tu comida favorita?</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Respuesta</label>
+                  <input type="text" id="regRespuesta" class="form-control" placeholder="Tu respuesta...">
+                </div>
               </div>
               <div class="d-grid mt-3">
                 <button type="button" id="btnRegistrar" class="btn btn-brand btn-lg" onclick="registrarCliente()">
@@ -248,9 +267,87 @@
                 </button>
               </div>
               <p class="text-center text-muted small mt-2">
+                <a href="#" class="text-muted small text-decoration-none"
+                  onclick="switchAuth('forgot'); return false;">¿Olvidaste tu contraseña?</a>
+              </p>
+              <p class="text-center text-muted small mt-1">
                 ¿No tienes cuenta?
                 <a href="#" class="text-warning-emphasis fw-semibold text-decoration-none"
                   onclick="switchAuth('registro'); return false;">Regístrate aquí</a>
+              </p>
+            </div>
+
+            <!-- Recuperar cuenta — 3 pasos -->
+            <div id="forgotClienteForm" class="d-none">
+              <div id="fcStep1">
+                <p class="text-muted small mb-3">Ingresa tu DNI y te mostraremos tu pregunta de seguridad.</p>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Tu DNI</label>
+                  <input type="text" id="fcDni" class="form-control form-control-lg" placeholder="12345678"
+                    pattern="\d{8}" inputmode="numeric" maxlength="8">
+                </div>
+                <div id="fcError1" class="alert alert-danger py-2 small d-none"></div>
+                <div class="d-grid">
+                  <button class="btn btn-brand btn-lg" onclick="fcBuscarPregunta()">
+                    <span id="fcBtn1">Continuar</span>
+                  </button>
+                </div>
+              </div>
+              <div id="fcStep2" class="d-none">
+                <div class="alert alert-light border mb-3 py-2">
+                  <small class="text-muted d-block">Pregunta de seguridad:</small>
+                  <strong id="fcPreguntaText"></strong>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Tu respuesta</label>
+                  <input type="text" id="fcRespuesta" class="form-control" placeholder="Escribe tu respuesta...">
+                </div>
+                <div id="fcError2" class="alert alert-danger py-2 small d-none"></div>
+                <div class="d-grid mb-2">
+                  <button class="btn btn-brand btn-lg" onclick="fcVerificar()">
+                    <span id="fcBtn2">Verificar</span>
+                  </button>
+                </div>
+                <button id="fcBtnContactAdmin2" class="btn btn-success w-100 fw-semibold mb-2 d-none" onclick="fcIrContactAdmin()">
+                  <i class="bi bi-whatsapp me-1"></i> Contactar al administrador
+                </button>
+                <button class="btn btn-link btn-sm w-100 text-muted" onclick="fcReset()">← Volver</button>
+              </div>
+              <div id="fcStep3" class="d-none text-center">
+                <i class="bi bi-check-circle-fill text-success" style="font-size:2.5rem;"></i>
+                <p class="fw-semibold mt-2 mb-1">¡Cuenta recuperada!</p>
+                <p class="text-muted small mb-3">Hola <strong id="fcNombre"></strong>, tu nueva contraseña temporal es:</p>
+                <div class="bg-light border rounded p-2 mb-3 d-flex align-items-center justify-content-between">
+                  <code id="fcTempPass" class="fs-5 fw-bold text-dark"></code>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="fcCopiar()" title="Copiar">
+                    <i class="bi bi-clipboard"></i>
+                  </button>
+                </div>
+                <p class="text-muted small mb-3">Cámbiala después de ingresar.</p>
+                <div class="mb-2 text-start">
+                  <label class="form-label small fw-semibold">Tu número de WhatsApp</label>
+                  <input type="tel" id="fcTelefono" class="form-control" placeholder="Ej: 51987654321">
+                </div>
+                <div class="d-grid mb-2">
+                  <button class="btn btn-success" onclick="fcEnviarWsp()">
+                    <i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp
+                  </button>
+                </div>
+              </div>
+              <!-- Paso 4: contactar admin -->
+              <div id="fcStep4" class="d-none text-center">
+                <i class="bi bi-person-lines-fill text-warning" style="font-size:2.5rem;"></i>
+                <p class="fw-semibold mt-2 mb-1">Contacta al administrador</p>
+                <p class="text-muted small mb-3">No pudimos verificar tu identidad. Escríbele al administrador para recuperar tu acceso.</p>
+                <button class="btn btn-success w-100 fw-semibold" id="fcBtnContactAdmin" onclick="fcContactarAdmin()">
+                  <i class="bi bi-whatsapp me-1"></i> Notificar al administrador
+                </button>
+                <button class="btn btn-link btn-sm w-100 text-muted mt-2" onclick="fcReset()">← Volver</button>
+              </div>
+
+              <p class="text-center text-muted small mt-2">
+                <a href="#" class="text-warning-emphasis fw-semibold text-decoration-none"
+                  onclick="switchAuth('login'); return false;">← Volver al inicio de sesión</a>
               </p>
             </div>
 
@@ -265,7 +362,7 @@
             <p class="text-muted small mb-4">
               Este acceso es solo para administradores, personal de ventas y cocina.
             </p>
-            <a href="index.html" class="btn btn-brand btn-lg w-100">
+            <a href="login.html" class="btn btn-brand btn-lg w-100">
               <i class="bi bi-box-arrow-in-right me-2"></i>Ir al panel de acceso
             </a>
           </div>

@@ -30,7 +30,7 @@ async function apiFetch(endpoint, options = {}) {
     if (esPersonal) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      window.location.href = "index.html";
+      window.location.href = "login.html";
     }
     throw new Error("No tienes permiso para realizar esta acción.");
   }

@@ -40,6 +40,7 @@ function renderTablaClientes(lista) {
       '<td class="text-end">' +
         '<button class="btn btn-sm btn-outline-secondary me-1" onclick="editarCliente(' + c.id + ')">Editar</button>' +
         '<button class="btn btn-sm btn-outline-warning me-1" onclick="abrirModalResetClave(' + c.id + ', \'' + (c.nombre ?? '') + '\')" title="Restablecer contraseña"><i class="bi bi-key"></i></button>' +
+        (c.telefono ? '<button class="btn btn-sm btn-outline-success me-1" onclick="enviarClaveTemporalWspCliente(' + c.id + ')" title="Enviar clave temporal por WhatsApp"><i class="bi bi-whatsapp"></i></button>' : '') +
         btnEstado +
       '</td>' +
       '</tr>';
@@ -66,6 +67,19 @@ function editarCliente(id) {
   document.getElementById('direccionCliente').value = c.direccion ?? '';
 
   new bootstrap.Modal(document.getElementById('clienteModal')).show();
+}
+
+async function enviarClaveTemporalWspCliente(id) {
+  try {
+    const data = await apiFetch('/api/clientes/' + id + '/generar-clave-temporal', { method: 'POST' });
+    const tel = (data.telefono || '').replace(/\D/g, '');
+    const msg = encodeURIComponent(
+      'Hola ' + data.nombre + ', tu nueva contraseña de Dulce Momento es: *' + data.tempPassword + '*\nCámbiala después de ingresar.'
+    );
+    window.open('https://wa.me/' + tel + '?text=' + msg, '_blank');
+  } catch (e) {
+    alert(e.message);
+  }
 }
 
 async function toggleActivo(id, activo) {

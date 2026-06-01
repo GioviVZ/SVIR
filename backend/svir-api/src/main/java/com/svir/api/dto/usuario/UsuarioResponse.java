@@ -15,5 +15,7 @@ public class UsuarioResponse {
     private String email;
     private RolUsuario rol;
     private Boolean activo;
+    private String telefono;
+    private String preguntaSeguridad;
     private LocalDateTime createdAt;
 }

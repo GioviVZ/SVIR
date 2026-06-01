@@ -5,9 +5,11 @@ import com.svir.api.dto.usuario.UsuarioResponse;
 import com.svir.api.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -36,5 +38,10 @@ public class UsuarioController {
     public void cambiarActivo(@PathVariable Long id,
                               @RequestParam Boolean activo) {
         usuarioService.cambiarActivo(id, activo);
+    }
+
+    @PostMapping("/{id}/generar-clave-temporal")
+    public ResponseEntity<Map<String, String>> generarClaveTemporal(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.generarClaveTemporalById(id));
     }
 }

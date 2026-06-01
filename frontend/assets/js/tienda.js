@@ -144,8 +144,8 @@ function switchTab(tab) {
 }
 
 function switchAuth(modo) {
-  const modos = ["invitado", "registro", "login"];
-  const formIds = { invitado: "invitadoClienteForm", registro: "registroClienteForm", login: "loginClienteForm" };
+  const modos = ["invitado", "registro", "login", "forgot"];
+  const formIds = { invitado: "invitadoClienteForm", registro: "registroClienteForm", login: "loginClienteForm", forgot: "forgotClienteForm" };
   const btnIds = { invitado: "btnModoInvitado", registro: "btnModoRegistro", login: "btnModoLogin" };
 
   modos.forEach(m => {
@@ -154,6 +154,8 @@ function switchAuth(modo) {
     if (form) form.classList.toggle("d-none", m !== modo);
     if (btn) btn.className = `btn ${m === modo ? "btn-brand" : "btn-outline-secondary"} flex-fill`;
   });
+
+  if (modo === "forgot") fcReset();
 
   const mensaje = document.getElementById("authMensaje");
   if (mensaje) { mensaje.textContent = ""; mensaje.className = "mt-3 small"; }
@@ -202,9 +204,12 @@ async function registrarCliente() {
   if (btn) { btn.disabled = true; btn.textContent = "Registrando..."; }
 
   try {
+    const pregunta  = (document.getElementById("regPregunta")?.value || "") || null;
+    const respuesta = (document.getElementById("regRespuesta")?.value || "").trim() || null;
+
     const cliente = await apiFetch("/api/clientes/registro", {
       method: "POST",
-      body: JSON.stringify({ nombre, dni, ruc: ruc || null, telefono: telefono || null, email: email || null, direccion: direccion || null, password })
+      body: JSON.stringify({ nombre, dni, ruc: ruc || null, telefono: telefono || null, email: email || null, direccion: direccion || null, password, preguntaSeguridad: pregunta, respuestaSeguridad: respuesta })
     });
 
     guardarClienteWeb({ nombre: cliente.nombre, dni: cliente.dni, telefono: cliente.telefono, clienteId: cliente.id, esInvitado: false });
@@ -400,4 +405,91 @@ function renderProductoCard(producto, idx = 0) {
         </div>
       </div>
     </div>`;
+}
+
+// --- Recuperar cuenta cliente ---
+let _fcTempPass = '', _fcNombre = '', _fcDni = '';
+
+function fcReset() {
+  ['fcStep2','fcStep3','fcStep4'].forEach(id => document.getElementById(id)?.classList.add('d-none'));
+  document.getElementById('fcStep1')?.classList.remove('d-none');
+  ['fcError1','fcError2'].forEach(id => document.getElementById(id)?.classList.add('d-none'));
+  const bca = document.getElementById('fcBtnContactAdmin2'); if (bca) bca.classList.add('d-none');
+  const f1 = document.getElementById('fcDni'); if (f1) f1.value = '';
+  const f2 = document.getElementById('fcRespuesta'); if (f2) f2.value = '';
+}
+
+function fcIrContactAdmin() {
+  ['fcStep1','fcStep2','fcStep3'].forEach(id => document.getElementById(id)?.classList.add('d-none'));
+  document.getElementById('fcStep4')?.classList.remove('d-none');
+}
+
+async function fcBuscarPregunta() {
+  const dni = (document.getElementById('fcDni')?.value || '').trim();
+  const errEl = document.getElementById('fcError1');
+  const btnEl = document.getElementById('fcBtn1');
+  errEl.classList.add('d-none');
+  if (!/^\d{8}$/.test(dni)) { errEl.textContent = 'Ingresa un DNI válido de 8 dígitos.'; errEl.classList.remove('d-none'); return; }
+  if (btnEl) btnEl.textContent = 'Buscando...';
+  try {
+    const data = await apiFetch('/api/clientes/forgot-password/pregunta', { method: 'POST', body: JSON.stringify({ dni }) });
+    _fcDni = dni;
+    _fcNombre = data.nombre;
+    document.getElementById('fcPreguntaText').textContent = data.pregunta;
+    document.getElementById('fcStep1').classList.add('d-none');
+    document.getElementById('fcStep2').classList.remove('d-none');
+  } catch (e) {
+    fcIrContactAdmin();
+  } finally { if (btnEl) btnEl.textContent = 'Continuar'; }
+}
+
+async function fcVerificar() {
+  const respuesta = (document.getElementById('fcRespuesta')?.value || '').trim();
+  const errEl = document.getElementById('fcError2');
+  const btnEl = document.getElementById('fcBtn2');
+  errEl.classList.add('d-none');
+  if (!respuesta) { errEl.textContent = 'Escribe tu respuesta.'; errEl.classList.remove('d-none'); return; }
+  if (btnEl) btnEl.textContent = 'Verificando...';
+  try {
+    const data = await apiFetch('/api/clientes/forgot-password/verificar', { method: 'POST', body: JSON.stringify({ dni: _fcDni, respuesta }) });
+    _fcTempPass = data.tempPassword;
+    document.getElementById('fcTempPass').textContent = data.tempPassword;
+    document.getElementById('fcNombre').textContent = data.nombre;
+    document.getElementById('fcTelefono').value = data.telefono || '';
+    document.getElementById('fcStep2').classList.add('d-none');
+    document.getElementById('fcStep3').classList.remove('d-none');
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('d-none');
+    document.getElementById('fcBtnContactAdmin2')?.classList.remove('d-none');
+  } finally { if (btnEl) btnEl.textContent = 'Verificar'; }
+}
+
+function fcCopiar() { navigator.clipboard.writeText(_fcTempPass); }
+
+function fcEnviarWsp() {
+  const tel = (document.getElementById('fcTelefono')?.value || '').replace(/\D/g, '');
+  if (!tel) { alert('Ingresa tu número de WhatsApp.'); return; }
+  const msg = encodeURIComponent(`Hola ${_fcNombre}, tu nueva contraseña temporal de Dulce Momento es: *${_fcTempPass}*\nCámbiala después de ingresar.`);
+  window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+}
+
+async function fcContactarAdmin() {
+  const btn = document.getElementById('fcBtnContactAdmin');
+  if (btn) { btn.textContent = 'Buscando contacto...'; btn.disabled = true; }
+  try {
+    const admin = await apiFetch('/api/auth/admin-contacto');
+    const tel = (admin.telefono || '').replace(/\D/g, '');
+    const nombre = _fcNombre || 'un cliente';
+    const msg = encodeURIComponent(`Hola ${admin.nombre}, soy ${nombre} y necesito recuperar mi contraseña de Dulce Momento. ¿Puedes ayudarme?`);
+    if (tel) {
+      window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+    } else {
+      alert('El administrador no tiene número registrado. Contáctalo directamente.');
+    }
+  } catch (e) {
+    alert('No se pudo obtener el contacto del administrador.');
+  } finally {
+    if (btn) { btn.innerHTML = '<i class="bi bi-whatsapp me-1"></i> Notificar al administrador'; btn.disabled = false; }
+  }
 }

@@ -1,10 +1,9 @@
 package com.svir.api.service;
 
-import com.svir.api.dto.cliente.ClienteLoginRequest;
-import com.svir.api.dto.cliente.ClienteRegistroRequest;
-import com.svir.api.dto.cliente.ClienteRequest;
-import com.svir.api.dto.cliente.ClienteResetPasswordRequest;
-import com.svir.api.dto.cliente.ClienteResponse;
+import com.svir.api.dto.cliente.*;
+
+import java.security.SecureRandom;
+import java.util.Map;
 import com.svir.api.entity.Cliente;
 import com.svir.api.exception.BusinessException;
 import com.svir.api.exception.ResourceNotFoundException;
@@ -65,6 +64,9 @@ public class ClienteService {
         if (clienteRepository.existsByDni(request.getDni())) {
             throw new BusinessException("Ya existe una cuenta con ese DNI. Ingresa con tu DNI y contraseña.");
         }
+        String respuestaHash = (request.getRespuestaSeguridad() != null && !request.getRespuestaSeguridad().isBlank())
+                ? passwordEncoder.encode(request.getRespuestaSeguridad().toLowerCase().trim()) : null;
+
         Cliente cliente = Cliente.builder()
                 .nombre(request.getNombre())
                 .dni(request.getDni())
@@ -72,6 +74,8 @@ public class ClienteService {
                 .telefono(request.getTelefono())
                 .direccion(request.getDireccion())
                 .email(request.getEmail())
+                .preguntaSeguridad(request.getPreguntaSeguridad())
+                .respuestaSeguridad(respuestaHash)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .activo(true)
                 .createdAt(LocalDateTime.now())
@@ -87,6 +91,59 @@ public class ClienteService {
             throw new BusinessException("DNI o contraseña incorrectos.");
         }
         return toResponse(cliente);
+    }
+
+    public Map<String, String> obtenerPreguntaCliente(String dni) {
+        Cliente cliente = clienteRepository.findByDni(dni.trim())
+                .orElseThrow(() -> new BusinessException("No encontramos una cuenta con ese DNI."));
+        if (cliente.getPreguntaSeguridad() == null || cliente.getPreguntaSeguridad().isBlank()) {
+            throw new BusinessException("Esta cuenta no tiene pregunta de seguridad configurada.");
+        }
+        return Map.of("pregunta", cliente.getPreguntaSeguridad(), "nombre", cliente.getNombre());
+    }
+
+    public Map<String, String> verificarRespuestaClienteYResetear(String dni, String respuesta) {
+        Cliente cliente = clienteRepository.findByDni(dni.trim())
+                .orElseThrow(() -> new BusinessException("No encontramos una cuenta con ese DNI."));
+        if (cliente.getRespuestaSeguridad() == null) {
+            throw new BusinessException("Esta cuenta no tiene pregunta de seguridad configurada.");
+        }
+        if (!passwordEncoder.matches(respuesta.toLowerCase().trim(), cliente.getRespuestaSeguridad())) {
+            throw new BusinessException("Respuesta incorrecta.");
+        }
+        String tempPassword = generarPasswordTemporal();
+        cliente.setPasswordHash(passwordEncoder.encode(tempPassword));
+        cliente.setUpdatedAt(LocalDateTime.now());
+        clienteRepository.save(cliente);
+        return Map.of("tempPassword", tempPassword, "nombre", cliente.getNombre(),
+                "telefono", cliente.getTelefono() != null ? cliente.getTelefono() : "");
+    }
+
+    public Map<String, String> generarClaveTemporalById(Long id) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+        String tempPassword = generarPasswordTemporal();
+        cliente.setPasswordHash(passwordEncoder.encode(tempPassword));
+        cliente.setUpdatedAt(LocalDateTime.now());
+        clienteRepository.save(cliente);
+        return Map.of("tempPassword", tempPassword, "nombre", cliente.getNombre(),
+                "telefono", cliente.getTelefono() != null ? cliente.getTelefono() : "");
+    }
+
+    private String generarPasswordTemporal() {
+        String upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        String lower = "abcdefghjkmnpqrstuvwxyz";
+        String digits = "23456789";
+        String special = "#@$!";
+        String all = upper + lower + digits + special;
+        SecureRandom rnd = new SecureRandom();
+        StringBuilder sb = new StringBuilder();
+        sb.append(upper.charAt(rnd.nextInt(upper.length())));
+        sb.append(lower.charAt(rnd.nextInt(lower.length())));
+        sb.append(digits.charAt(rnd.nextInt(digits.length())));
+        sb.append(special.charAt(rnd.nextInt(special.length())));
+        for (int i = 4; i < 8; i++) sb.append(all.charAt(rnd.nextInt(all.length())));
+        return sb.toString();
     }
 
     public void resetearClave(Long id, ClienteResetPasswordRequest request) {

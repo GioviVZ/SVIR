@@ -22,4 +22,10 @@ public class UsuarioRequest {
     private RolUsuario rol;
 
     private Boolean activo;
+
+    private String telefono;
+
+    private String preguntaSeguridad;
+
+    private String respuestaSeguridad;
 }

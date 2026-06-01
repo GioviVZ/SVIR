@@ -1,16 +1,14 @@
 package com.svir.api.controller;
 
-import com.svir.api.dto.cliente.ClienteLoginRequest;
-import com.svir.api.dto.cliente.ClienteRegistroRequest;
-import com.svir.api.dto.cliente.ClienteRequest;
-import com.svir.api.dto.cliente.ClienteResetPasswordRequest;
-import com.svir.api.dto.cliente.ClienteResponse;
+import com.svir.api.dto.cliente.*;
 import com.svir.api.service.ClienteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/clientes")
@@ -40,6 +38,21 @@ public class ClienteController {
     @GetMapping("/buscar")
     public ClienteResponse buscarPorDni(@RequestParam String dni) {
         return clienteService.buscarPorDni(dni);
+    }
+
+    @PostMapping("/{id}/generar-clave-temporal")
+    public ResponseEntity<Map<String, String>> generarClaveTemporal(@PathVariable Long id) {
+        return ResponseEntity.ok(clienteService.generarClaveTemporalById(id));
+    }
+
+    @PostMapping("/forgot-password/pregunta")
+    public ResponseEntity<Map<String, String>> obtenerPregunta(@Valid @RequestBody ClienteForgotPreguntaRequest request) {
+        return ResponseEntity.ok(clienteService.obtenerPreguntaCliente(request.getDni()));
+    }
+
+    @PostMapping("/forgot-password/verificar")
+    public ResponseEntity<Map<String, String>> verificarRespuesta(@Valid @RequestBody ClienteForgotVerificarRequest request) {
+        return ResponseEntity.ok(clienteService.verificarRespuestaClienteYResetear(request.getDni(), request.getRespuesta()));
     }
 
     @PostMapping

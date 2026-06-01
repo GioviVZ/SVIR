@@ -36,6 +36,12 @@ public class Cliente {
     @Column(length = 150)
     private String email;
 
+    @Column(name = "pregunta_seguridad", length = 255)
+    private String preguntaSeguridad;
+
+    @Column(name = "respuesta_seguridad", length = 255)
+    private String respuestaSeguridad;
+
     @Column(nullable = false)
     private Boolean activo;
 

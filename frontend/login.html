@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SVIR | Iniciar sesión</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #fdf8f2;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    /* ── Wrapper card ─────────────────────────────────────── */
+    .login-card {
+      display: flex;
+      width: 100%;
+      max-width: 960px;
+      min-height: 580px;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow:
+        0 2px 4px rgba(0,0,0,0.04),
+        0 8px 24px rgba(0,0,0,0.08),
+        0 24px 64px rgba(0,0,0,0.06);
+    }
+
+    /* ── Left brand panel ─────────────────────────────────── */
+    .login-brand {
+      width: 46%;
+      flex-shrink: 0;
+      background:
+        radial-gradient(ellipse at 15% 15%, rgba(255,255,255,0.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 85%, rgba(0,0,0,0.12) 0%, transparent 45%),
+        linear-gradient(150deg, #f59e0b 0%, #d97706 40%, #b45309 75%, #92400e 100%);
+      padding: 3rem 2.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-brand::before {
+      content: '';
+      position: absolute;
+      width: 420px; height: 420px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.1);
+      top: -140px; left: -140px;
+      pointer-events: none;
+    }
+    .login-brand::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.08);
+      bottom: -80px; right: -80px;
+      pointer-events: none;
+    }
+
+    .brand-top { position: relative; z-index: 1; }
+
+    .brand-logo {
+      width: 72px; height: 72px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(255,255,255,0.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.9rem; font-weight: 800; color: white;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      letter-spacing: -1px;
+    }
+
+    .brand-title {
+      color: white;
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+      margin-bottom: 0.5rem;
+    }
+
+    .brand-subtitle {
+      color: rgba(255,255,255,0.72);
+      font-size: 0.87rem;
+      line-height: 1.6;
+      max-width: 240px;
+    }
+
+    .brand-pills {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .brand-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      padding: 0.6rem 0.9rem;
+      color: white;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+
+    .brand-pill i { font-size: 0.95rem; opacity: 0.85; flex-shrink: 0; }
+
+    .brand-footer {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.72rem;
+    }
+
+    .brand-footer i { font-size: 0.75rem; }
+
+    /* ── Right form panel ─────────────────────────────────── */
+    .login-form-side {
+      flex: 1;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2.5rem;
+    }
+
+    .login-form-box {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .form-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #d97706;
+      background: #fef3c7;
+      border-radius: 6px;
+      padding: 3px 10px;
+      margin-bottom: 1rem;
+    }
+
+    .form-title {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.3rem;
+    }
+
+    .form-sub {
+      color: #6b7280;
+      font-size: 0.87rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Inputs */
+    .field-label {
+      display: block;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.4rem;
+    }
+
+    .input-wrap {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    .input-wrap .ic {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      font-size: 0.95rem;
+      pointer-events: none;
+      z-index: 2;
+      transition: color 0.15s;
+    }
+
+    .input-wrap .form-control {
+      padding-left: 2.5rem;
+      border-radius: 12px;
+      border: 1.5px solid #e5e7eb;
+      font-size: 0.9rem;
+      height: 46px;
+      color: #111827;
+      background: #f9fafb;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+
+    .input-wrap .form-control::placeholder { color: #c0c5cc; }
+
+    .input-wrap .form-control:focus {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3.5px rgba(245,158,11,0.14);
+      background: #ffffff;
+      outline: none;
+    }
+
+    .input-wrap .form-control:focus + .ic,
+    .input-wrap .form-control:focus ~ .ic { color: #d97706; }
+
+    .input-wrap.has-eye .form-control { padding-right: 2.6rem; }
+
+    .btn-eye {
+      position: absolute;
+      right: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 4px 5px;
+      color: #9ca3af;
+      cursor: pointer;
+      z-index: 3;
+      border-radius: 6px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .btn-eye:hover { color: #374151; }
+
+    /* Remember me */
+    .remember-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .remember-row input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: #d97706;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .remember-row label {
+      font-size: 0.83rem;
+      color: #6b7280;
+      cursor: pointer;
+    }
+
+    /* Error */
+    .login-error {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 0.65rem 0.9rem;
+      font-size: 0.85rem;
+      color: #dc2626;
+      margin-bottom: 1rem;
+    }
+
+    .login-error i { flex-shrink: 0; font-size: 0.9rem; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-6px); }
+      40%       { transform: translateX(6px); }
+      60%       { transform: translateX(-4px); }
+      80%       { transform: translateX(4px); }
+    }
+
+    .shake { animation: shake 0.38s ease; }
+
+    /* Submit button */
+    .btn-login {
+      width: 100%;
+      height: 48px;
+      border: none;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+      font-size: 0.93rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.15s, transform 0.12s, box-shadow 0.15s;
+      box-shadow: 0 2px 12px rgba(217,119,6,0.3);
+    }
+
+    .btn-login:hover:not(:disabled) {
+      opacity: 0.93;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 18px rgba(217,119,6,0.38);
+    }
+
+    .btn-login:active:not(:disabled) { transform: translateY(0); }
+
+    .btn-login:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .btn-login .spinner {
+      width: 17px; height: 17px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .login-footer {
+      margin-top: 1.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: #9ca3af;
+      font-size: 0.75rem;
+    }
+
+    .login-footer i { font-size: 0.8rem; }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 720px) {
+      body { padding: 0; align-items: stretch; }
+      .login-card {
+        flex-direction: column;
+        border-radius: 0;
+        min-height: 100vh;
+        box-shadow: none;
+      }
+      .login-brand {
+        width: 100%;
+        padding: 2rem 1.75rem 1.75rem;
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+        border-radius: 0 0 28px 28px;
+      }
+      .login-brand::before, .login-brand::after { display: none; }
+      .brand-top { display: flex; align-items: center; gap: 1rem; }
+      .brand-logo { width: 54px; height: 54px; border-radius: 16px; font-size: 1.4rem; margin-bottom: 0; }
+      .brand-subtitle, .brand-pills, .brand-footer { display: none; }
+      .login-form-side { padding: 2rem 1.5rem; align-items: flex-start; padding-top: 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-card">
+
+  <!-- ── Brand panel ── -->
+  <div class="login-brand">
+    <div class="brand-top">
+      <div class="brand-logo">DM</div>
+      <div>
+        <div class="brand-title">Dulce Momento</div>
+        <div class="brand-subtitle">Sistema integral para repostería artesanal.</div>
+      </div>
+    </div>
+
+    <div class="brand-pills">
+      <div class="brand-pill">
+        <i class="bi bi-shop"></i>
+        <span>Punto de venta presencial</span>
+      </div>
+      <div class="brand-pill">
+        <i class="bi bi-box-seam"></i>
+        <span>Control de stock en tiempo real</span>
+      </div>
+      <div class="brand-pill">
+        <i class="bi bi-fire"></i>
+        <span>Gestión de producción y recetas</span>
+      </div>
+      <div class="brand-pill">
+        <i class="bi bi-scooter"></i>
+        <span>Delivery y repartidores</span>
+      </div>
+      <div class="brand-pill">
+        <i class="bi bi-bar-chart-line"></i>
+        <span>Dashboard y reportes</span>
+      </div>
+    </div>
+
+    <div class="brand-footer">
+      <i class="bi bi-shield-check"></i>
+      <span>Acceso exclusivo para personal autorizado</span>
+    </div>
+  </div>
+
+  <!-- ── Form panel ── -->
+  <div class="login-form-side">
+    <div class="login-form-box">
+
+      <div class="form-eyebrow"><i class="bi bi-lock-fill"></i> Panel de gestión</div>
+      <h1 class="form-title">Bienvenido</h1>
+      <p class="form-sub">Ingresa tus credenciales para continuar.</p>
+
+      <form id="loginForm" novalidate>
+
+        <div>
+          <label class="field-label" for="username">Correo electrónico</label>
+          <div class="input-wrap">
+            <input type="email" id="username" class="form-control"
+              placeholder="usuario@email.com" autocomplete="username" required>
+            <i class="bi bi-envelope ic"></i>
+          </div>
+        </div>
+
+        <div>
+          <label class="field-label" for="password">Contraseña</label>
+          <div class="input-wrap has-eye">
+            <input type="password" id="password" class="form-control"
+              placeholder="••••••••" autocomplete="current-password" required>
+            <i class="bi bi-lock ic"></i>
+            <button type="button" class="btn-eye" onclick="togglePass()" tabindex="-1">
+              <i class="bi bi-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="remember-row">
+          <input type="checkbox" id="recordar">
+          <label for="recordar">Recordar mi correo</label>
+        </div>
+
+        <div id="errorBox" class="login-error d-none">
+          <i class="bi bi-exclamation-circle-fill"></i>
+          <span id="errorText"></span>
+        </div>
+
+        <button type="submit" class="btn-login" id="btnSubmit">
+          <span id="btnLabel">Ingresar</span>
+          <div id="btnSpinner" class="spinner d-none"></div>
+        </button>
+
+      </form>
+
+      <div class="text-center mt-2">
+        <button type="button" class="btn btn-link btn-sm text-muted p-0" style="font-size:.8rem;"
+                data-bs-toggle="modal" data-bs-target="#modalOlvide">
+          ¿Olvidaste tu contraseña?
+        </button>
+      </div>
+
+      <div class="login-footer">
+        <i class="bi bi-shield-lock"></i>
+        <span>Conexión segura · SVIR v1.0</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal recuperar contraseña -->
+<div class="modal fade" id="modalOlvide" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px; border:none;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Recuperar contraseña</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+
+        <!-- Paso 1: email -->
+        <div id="fpStep1">
+          <p class="text-muted small mb-3">Ingresa tu correo y te mostraremos tu pregunta de seguridad.</p>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Correo electrónico</label>
+            <input type="email" id="fpEmail" class="form-control" placeholder="tu@email.com">
+          </div>
+          <div id="fpError1" class="alert alert-danger py-2 small d-none"></div>
+          <button class="btn btn-warning w-100 fw-semibold" onclick="fpBuscarPregunta()">
+            <span id="fpBtn1Label">Continuar</span>
+          </button>
+        </div>
+
+        <!-- Paso 2: pregunta + respuesta -->
+        <div id="fpStep2" class="d-none">
+          <div class="alert alert-light border mb-3 py-2">
+            <small class="text-muted d-block">Pregunta de seguridad:</small>
+            <strong id="fpPreguntaText"></strong>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Tu respuesta</label>
+            <input type="text" id="fpRespuesta" class="form-control" placeholder="Escribe tu respuesta...">
+          </div>
+          <div id="fpError2" class="alert alert-danger py-2 small d-none"></div>
+          <button class="btn btn-warning w-100 fw-semibold" onclick="fpVerificar()">
+            <span id="fpBtn2Label">Verificar</span>
+          </button>
+          <button id="fpBtnContactAdmin2" class="btn btn-success w-100 fw-semibold mt-2 d-none" onclick="fpIrContactAdmin()">
+            <i class="bi bi-whatsapp me-1"></i> Contactar al administrador
+          </button>
+          <button class="btn btn-link btn-sm w-100 text-muted mt-1" onclick="fpReset()">← Volver</button>
+        </div>
+
+        <!-- Paso 3: nueva clave + WhatsApp -->
+        <div id="fpStep3" class="d-none text-center">
+          <div class="mb-3">
+            <i class="bi bi-check-circle-fill text-success" style="font-size:2.5rem;"></i>
+          </div>
+          <p class="fw-semibold mb-1">¡Contraseña restablecida!</p>
+          <p class="text-muted small mb-3">Hola <strong id="fpNombre"></strong>, tu nueva contraseña temporal es:</p>
+          <div class="bg-light border rounded p-2 mb-3 d-flex align-items-center justify-content-between">
+            <code id="fpTempPass" class="fs-5 fw-bold text-dark"></code>
+            <button class="btn btn-sm btn-outline-secondary" onclick="fpCopiar()" title="Copiar">
+              <i class="bi bi-clipboard"></i>
+            </button>
+          </div>
+          <p class="text-muted small mb-3">Cámbiala después de ingresar.</p>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Tu número de WhatsApp</label>
+            <input type="tel" id="fpTelefono" class="form-control" placeholder="Ej: 51987654321">
+          </div>
+          <button class="btn btn-success w-100 fw-semibold" onclick="fpEnviarWsp()">
+            <i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp
+          </button>
+        </div>
+
+        <!-- Paso 4: contactar administrador -->
+        <div id="fpStep4" class="d-none text-center">
+          <div class="mb-3">
+            <i class="bi bi-person-lines-fill text-warning" style="font-size:2.5rem;"></i>
+          </div>
+          <p class="fw-semibold mb-1">Contacta al administrador</p>
+          <p class="text-muted small mb-3">No pudimos verificar tu identidad. Escríbele al administrador para recuperar tu acceso.</p>
+          <button class="btn btn-success w-100 fw-semibold" id="fpBtnContactAdmin" onclick="fpContactarAdmin()">
+            <i class="bi bi-whatsapp me-1"></i> Notificar al administrador
+          </button>
+          <button class="btn btn-link btn-sm w-100 text-muted mt-2" onclick="fpReset()">← Volver</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+  const form       = document.getElementById("loginForm");
+  const errorBox   = document.getElementById("errorBox");
+  const errorText  = document.getElementById("errorText");
+  const btnSubmit  = document.getElementById("btnSubmit");
+  const btnLabel   = document.getElementById("btnLabel");
+  const btnSpinner = document.getElementById("btnSpinner");
+  const recordar   = document.getElementById("recordar");
+  const usernameEl = document.getElementById("username");
+
+  // Restaurar correo guardado
+  const savedEmail = localStorage.getItem("svir_remember_email");
+  if (savedEmail) {
+    usernameEl.value = savedEmail;
+    recordar.checked = true;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorBox.classList.add("d-none");
+
+    btnLabel.textContent = "Ingresando...";
+    btnSpinner.classList.remove("d-none");
+    btnSubmit.disabled = true;
+
+    const username = usernameEl.value.trim();
+    const password = document.getElementById("password").value;
+
+    if (recordar.checked) {
+      localStorage.setItem("svir_remember_email", username);
+    } else {
+      localStorage.removeItem("svir_remember_email");
+    }
+
+    try {
+      await login(username, password);
+    } catch (error) {
+      errorText.textContent = error.message || "Credenciales incorrectas. Intenta de nuevo.";
+      errorBox.classList.remove("d-none");
+      errorBox.classList.remove("shake");
+      void errorBox.offsetWidth; // reflow para reiniciar animación
+      errorBox.classList.add("shake");
+      btnLabel.textContent = "Ingresar";
+      btnSpinner.classList.add("d-none");
+      btnSubmit.disabled = false;
+    }
+  });
+
+  function togglePass() {
+    const input = document.getElementById("password");
+    const icon  = document.getElementById("eyeIcon");
+    if (input.type === "password") {
+      input.type = "text";
+      icon.className = "bi bi-eye-slash";
+    } else {
+      input.type = "password";
+      icon.className = "bi bi-eye";
+    }
+  }
+
+  // --- Recuperar contraseña ---
+  let _fpTempPass = '', _fpNombre = '', _fpEmail = '';
+
+  function fpReset() {
+    ['fpStep2','fpStep3','fpStep4'].forEach(id => document.getElementById(id).classList.add('d-none'));
+    document.getElementById('fpStep1').classList.remove('d-none');
+    document.getElementById('fpError1').classList.add('d-none');
+    document.getElementById('fpEmail').value = '';
+    document.getElementById('fpRespuesta').value = '';
+  }
+
+  function fpIrContactAdmin() {
+    ['fpStep1','fpStep2','fpStep3'].forEach(id => document.getElementById(id).classList.add('d-none'));
+    document.getElementById('fpStep4').classList.remove('d-none');
+  }
+
+  document.getElementById('modalOlvide').addEventListener('hidden.bs.modal', fpReset);
+
+  async function fpBuscarPregunta() {
+    const email = document.getElementById('fpEmail').value.trim();
+    const errEl = document.getElementById('fpError1');
+    const btnLbl = document.getElementById('fpBtn1Label');
+    errEl.classList.add('d-none');
+    if (!email) { errEl.textContent = 'Ingresa tu correo.'; errEl.classList.remove('d-none'); return; }
+    btnLbl.textContent = 'Buscando...';
+    try {
+      const data = await apiFetch('/api/auth/forgot-password/pregunta', {
+        method: 'POST', body: JSON.stringify({ email })
+      });
+      _fpEmail = email;
+      _fpNombre = data.nombre;
+      document.getElementById('fpPreguntaText').textContent = data.pregunta;
+      document.getElementById('fpStep1').classList.add('d-none');
+      document.getElementById('fpStep2').classList.remove('d-none');
+    } catch (e) {
+      // Sin pregunta de seguridad → ir directo a contactar admin
+      fpIrContactAdmin();
+    } finally { btnLbl.textContent = 'Continuar'; }
+  }
+
+  async function fpVerificar() {
+    const respuesta = document.getElementById('fpRespuesta').value.trim();
+    const errEl = document.getElementById('fpError2');
+    const btnLbl = document.getElementById('fpBtn2Label');
+    errEl.classList.add('d-none');
+    if (!respuesta) { errEl.textContent = 'Escribe tu respuesta.'; errEl.classList.remove('d-none'); return; }
+    btnLbl.textContent = 'Verificando...';
+    try {
+      const data = await apiFetch('/api/auth/forgot-password/verificar', {
+        method: 'POST', body: JSON.stringify({ email: _fpEmail, respuesta })
+      });
+      _fpTempPass = data.tempPassword;
+      document.getElementById('fpTempPass').textContent = data.tempPassword;
+      document.getElementById('fpNombre').textContent = data.nombre;
+      document.getElementById('fpTelefono').value = data.telefono || '';
+      document.getElementById('fpStep2').classList.add('d-none');
+      document.getElementById('fpStep3').classList.remove('d-none');
+    } catch (e) {
+      // Respuesta incorrecta → mostrar error y botón contactar admin
+      errEl.textContent = e.message;
+      errEl.classList.remove('d-none');
+      document.getElementById('fpBtnContactAdmin2').classList.remove('d-none');
+    } finally { btnLbl.textContent = 'Verificar'; }
+  }
+
+  function fpCopiar() { navigator.clipboard.writeText(_fpTempPass); }
+
+  function fpEnviarWsp() {
+    const tel = document.getElementById('fpTelefono').value.replace(/\D/g, '');
+    if (!tel) { alert('Ingresa tu número de WhatsApp.'); return; }
+    const msg = encodeURIComponent(`Hola ${_fpNombre}, tu nueva contraseña temporal de SVIR es: *${_fpTempPass}*\nCámbiala después de ingresar.`);
+    window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+  }
+
+  async function fpContactarAdmin() {
+    const btn = document.getElementById('fpBtnContactAdmin');
+    btn.textContent = 'Buscando contacto...';
+    btn.disabled = true;
+    try {
+      const admin = await apiFetch('/api/auth/admin-contacto');
+      const tel = (admin.telefono || '').replace(/\D/g, '');
+      const nombreUsuario = _fpNombre || document.getElementById('fpEmail').value || 'un usuario';
+      const msg = encodeURIComponent(`Hola ${admin.nombre}, soy ${nombreUsuario} y necesito recuperar mi contraseña de SVIR. ¿Puedes ayudarme?`);
+      if (tel) {
+        window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+      } else {
+        alert('El administrador no tiene número registrado. Contáctalo directamente.');
+      }
+    } catch (e) {
+      alert('No se pudo obtener el contacto del administrador.');
+    } finally {
+      btn.innerHTML = '<i class="bi bi-whatsapp me-1"></i> Notificar al administrador';
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>
