@@ -127,6 +127,10 @@ body {
   margin-bottom: 6px;
 }
 
+.sidebar-group[data-roles] {
+  display: none;
+}
+
 .sidebar-group-btn {
   display: flex;
   align-items: center;

@@ -117,9 +117,7 @@ function filtrarNavPorRol() {
 
   document.querySelectorAll('.sidebar-group[data-roles]').forEach(group => {
     const roles = group.dataset.roles.split(',');
-    if (!roles.includes(rol)) {
-      group.style.display = 'none';
-    }
+    group.style.display = roles.includes(rol) ? '' : 'none';
   });
 }
 
