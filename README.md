@@ -16,9 +16,11 @@ Sistema de gestión integral para la pastelería **Dulce Momento**. Cubre el cic
 | **Producción** | Órdenes de cocina: por pedido o para reponer stock; descuenta ingredientes automáticamente al finalizar |
 | **Punto de Venta** | POS interno: selección de productos, carrito, elección de comprobante (Boleta simple / Boleta con DNI / Factura con RUC) e impresión del ticket |
 | **Movimientos** | Historial de entradas y salidas de productos e ingredientes con trazabilidad completa |
-| **Clientes** | Registro con DNI / RUC, teléfono y dirección; login con contraseña desde la tienda web; restablecimiento de contraseña desde el panel |
-| **Usuarios** | Alta y baja de personal con roles (Admin, Ventas, Cocina); contraseña con BCrypt |
-| **Tienda web** | Catálogo público, carrito y checkout; modos de acceso: invitado, registro con contraseña, login con DNI + contraseña |
+| **Clientes** | Registro con DNI / RUC, teléfono y dirección; login con contraseña desde la tienda web; recuperación con pregunta de seguridad; restablecimiento de contraseña desde el panel |
+| **Usuarios** | Alta y baja de personal con roles (Admin, Ventas, Cocina, Repartidor); contraseña con BCrypt; pregunta de seguridad para recuperación de clave |
+| **Tienda web** | Catálogo público, carrito y checkout con recojo en tienda o delivery (dirección + GPS); modos de acceso: invitado, registro con contraseña, login con DNI + contraseña |
+| **Mis pedidos** | Seguimiento del estado del pedido para el cliente (timeline visual); historial automático para clientes registrados e invitados |
+| **Panel Repartidor** | Vista mobile-first para personal con rol Repartidor: pedidos listos para recoger, en camino y entregados hoy, con dirección, GPS, WhatsApp y resumen del día |
 
 ---
 
@@ -40,13 +42,16 @@ Sistema de gestión integral para la pastelería **Dulce Momento**. Cubre el cic
 
 ## Roles y acceso
 
-| Rol | Páginas disponibles |
-|---|---|
-| `ADMIN` | Todas: dashboard, productos, ingredientes, recetas, pedidos, producción, POS, movimientos, usuarios, clientes |
-| `VENTAS` | POS, productos, pedidos, movimientos, clientes |
-| `COCINA` | Producción, ingredientes, recetas, movimientos |
+| Rol | Home por defecto | Páginas disponibles |
+|---|---|---|
+| `ADMIN` | dashboard.html | Todas: dashboard, productos, ingredientes, recetas, pedidos, producción, POS, movimientos, usuarios, clientes, repartidor |
+| `VENTAS` | pos.html | POS, productos, pedidos, clientes |
+| `COCINA` | produccion.html | Producción, ingredientes, recetas |
+| `REPARTIDOR` | repartidor.html | Solo el panel de repartidor (acceso de delivery) |
 
-Las rutas públicas (catálogo, registro y login de clientes, pedidos desde tienda web) no requieren autenticación de personal.
+`movimientos.html` (historial de inventario) es exclusivo de `ADMIN`.
+
+Las rutas públicas (catálogo, registro/login/recuperación de clientes, pedidos y seguimiento desde la tienda web) no requieren autenticación de personal.
 
 ---
 
@@ -72,27 +77,30 @@ SVIR/
 │           └── exception/           # GlobalExceptionHandler, BusinessException, ResourceNotFoundException
 │
 └── frontend/
-    ├── index.html                   # Login del personal interno
-    ├── home.html                    # Landing pública
+    ├── index.html                   # Redirige automáticamente a home.html
+    ├── login.html                   # Login del personal interno (con recuperación de clave)
+    ├── home.html                    # Landing pública + modal de auth de clientes
     ├── catalogo.html                # Catálogo público de productos
-    ├── carrito.html                 # Carrito de compras (tienda web)
+    ├── carrito.html                 # Carrito de compras (tienda web), recojo o delivery + GPS
     ├── checkout.html                # Checkout (tienda web)
+    ├── mis-pedidos.html             # Seguimiento e historial de pedidos del cliente
     ├── dashboard.html               # Panel de control (ADMIN)
     ├── productos.html               # CRUD de productos
-    ├── ingredientes.html            # CRUD de ingredientes
+    ├── ingredientes.html            # CRUD de ingredientes (incl. +Stock / -Merma)
     ├── recetas.html                 # Recetas por producto
-    ├── pedidos.html                 # Gestión de pedidos
+    ├── pedidos.html                 # Gestión de pedidos (incl. pin GPS de delivery)
     ├── produccion.html              # Órdenes de cocina
     ├── pos.html                     # Punto de venta presencial
-    ├── movimientos.html             # Historial de movimientos
+    ├── movimientos.html             # Historial de movimientos (solo ADMIN)
     ├── clientes.html                # Gestión de clientes
-    ├── usuarios.html                # Gestión de personal
+    ├── usuarios.html                # Gestión de personal (incl. rol Repartidor)
+    ├── repartidor.html              # Panel mobile-first del repartidor
     └── assets/
         ├── css/styles.css
         ├── js/
-        │   ├── api.js              # apiFetch() — fetch con JWT automático
-        │   ├── auth.js             # Login / logout del personal
-        │   ├── ui.js               # requireAuth(), control de acceso por rol
+        │   ├── api.js              # API_BASE dinámico + apiFetch() con JWT automático
+        │   ├── auth.js             # Login / logout del personal (redirige por rol)
+        │   ├── ui.js               # requireAuth(), control de acceso por rol (ROL_ACCESO)
         │   ├── dashboard.js
         │   ├── productos.js
         │   ├── ingredientes.js
@@ -103,10 +111,14 @@ SVIR/
         │   ├── movimientos.js
         │   ├── clientes.js         # CRUD + reseteo de contraseña
         │   ├── usuarios.js
-        │   ├── carrito.js
-        │   └── tienda.js           # Catálogo, auth de clientes, carrito web
+        │   ├── carrito.js          # Carrito web + checkout (recojo / delivery)
+        │   ├── tienda.js            # Catálogo, auth de clientes, carrito web, historial de pedidos
+        │   ├── mis-pedidos.js      # Seguimiento de pedidos del cliente
+        │   └── repartidor.js       # Panel de delivery (auto-refresh, GPS, WhatsApp)
         └── img/
 ```
+
+> **Importante:** todos los HTML deben cargar `api.js` **antes** de `auth.js`/`tienda.js`, ya que estos dependen de `API_BASE`.
 
 ---
 
@@ -155,14 +167,32 @@ mvn spring-boot:run
 API disponible en `http://localhost:8080`.  
 Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 
+Para acceder desde un celular en la misma red WiFi, `application.properties` debe tener `server.address=0.0.0.0` y conviene arrancar con:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Djava.net.preferIPv4Stack=true"
+```
+
+Sin ese flag, Spring Boot puede quedar escuchando solo en IPv6 y los dispositivos móviles no logran conectarse.
+
 ### 4. Abrir el frontend
 
-Abre `frontend/index.html` en el navegador o sirve la carpeta con un servidor estático:
+Sirve la carpeta `frontend` con un servidor estático y abre `index.html` (redirige a `home.html`):
 
 ```bash
 cd frontend
-python3 -m http.server 5500
+php -S 0.0.0.0:5500
 ```
+
+> En macOS evita `python3 -m http.server` para esto — hay versiones con un bug (`OSError: [Errno 57] Socket is not connected`) al servir por IPv4. `php -S` no tiene ese problema.
+
+`frontend/assets/js/api.js` detecta automáticamente la URL del backend (`API_BASE`) según el host:
+
+- **Localhost:** `http://localhost:8080`
+- **Red local / celular:** `http://<IP-del-host>:8080` (usa `window.location.hostname`)
+- **Dev Tunnels de VS Code** (`*.devtunnels.ms`): reemplaza el puerto del túnel de frontend por el del backend automáticamente
+
+Nunca hardcodear `http://localhost:8080` en el JS — usar siempre `API_BASE`.
 
 ---
 
@@ -174,6 +204,10 @@ python3 -m http.server 5500
 |---|---|---|---|
 | POST | `/api/auth/login` | Público | Login personal: `{email, password}` → `{token, rol, nombre}` |
 | GET | `/api/auth/me` | JWT | Perfil del usuario autenticado |
+| GET | `/api/auth/admin-contacto` | Público | Devuelve nombre/teléfono de un ADMIN activo para contacto de soporte |
+| POST | `/api/auth/forgot-password/pregunta` | Público | `{email}` → devuelve la pregunta de seguridad configurada |
+| POST | `/api/auth/forgot-password/verificar` | Público | `{email, respuesta}` → si coincide, genera y devuelve una contraseña temporal |
+| PATCH | `/api/auth/cambiar-password` | JWT | `{passwordActual, passwordNueva}` — cambia la propia contraseña |
 
 ### Productos (`/api/productos`)
 
@@ -210,14 +244,19 @@ python3 -m http.server 5500
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
 | GET | `/api/pedidos` | ADMIN, VENTAS | Listar todos los pedidos |
+| GET | `/api/pedidos/delivery` | ADMIN, VENTAS, REPARTIDOR | Pedidos `DELIVERY` activos (LISTO/EN_CAMINO) + entregados hoy |
+| GET | `/api/pedidos/cliente/{clienteId}` | Público | Historial de pedidos de un cliente registrado, más reciente primero |
+| GET | `/api/pedidos/seguimiento/{id}` | Público | Detalle de un pedido por ID (para seguimiento de invitados) |
 | GET | `/api/pedidos/{id}` | ADMIN, VENTAS | Obtener pedido por ID |
 | POST | `/api/pedidos` | Público* | Crear pedido: `{clienteId?, tipoOrigen, observacion?, detalles: [{productoId, cantidad}]}` |
-| PATCH | `/api/pedidos/{id}/estado` | ADMIN, VENTAS | Cambiar estado: `{estado: "ENTREGADO"}` |
+| PATCH | `/api/pedidos/{id}/estado` | ADMIN, VENTAS, REPARTIDOR | Cambiar estado: `{estado: "EN_CAMINO"}` |
 | PATCH | `/api/pedidos/{id}/cancelar` | ADMIN, VENTAS | Cancelar y restaurar stock |
 
-*Público para pedidos de tienda web (`tipoOrigen: "TIENDA"`); el POS envía `"PRESENCIAL"`.
+*Público para pedidos de tienda web (`tipoOrigen: "TIENDA"` o `"WEB"`/`"DELIVERY"` desde el carrito); el POS envía `"PRESENCIAL"`.
 
 La respuesta incluye `produccionId` (nullable): cuando el pedido se crea desde el POS con stock insuficiente, el sistema auto-genera una orden de producción y devuelve su ID en este campo.
+
+Para pedidos `DELIVERY`, la dirección, teléfono, referencia y coordenadas GPS se guardan codificados en `observacion` (ver [Flujo de delivery](#tienda-web--delivery-con-gps-y-panel-de-repartidor)).
 
 ### Producciones (`/api/producciones`)
 
@@ -235,22 +274,28 @@ La respuesta incluye `produccionId` (nullable): cuando el pedido se crea desde e
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
 | GET | `/api/clientes` | ADMIN, VENTAS | Listar clientes |
-| POST | `/api/clientes/registro` | Público | Registro tienda web: `{nombre, dni, ruc?, telefono?, email?, direccion?, password}` |
+| POST | `/api/clientes/registro` | Público | Registro tienda web: `{nombre, dni, ruc?, telefono?, email?, direccion?, password, preguntaSeguridad?, respuestaSeguridad?}` |
 | POST | `/api/clientes/login` | Público | Login tienda web: `{dni, password}` → datos del cliente |
 | GET | `/api/clientes/buscar` | Público | Buscar por DNI: `?dni=12345678` |
+| POST | `/api/clientes/forgot-password/pregunta` | Público | `{dni}` → devuelve la pregunta de seguridad configurada |
+| POST | `/api/clientes/forgot-password/verificar` | Público | `{dni, respuesta}` → si coincide, genera y devuelve una contraseña temporal |
 | POST | `/api/clientes` | ADMIN, VENTAS | Crear cliente manualmente |
 | PUT | `/api/clientes/{id}` | ADMIN, VENTAS | Actualizar cliente |
 | PATCH | `/api/clientes/{id}/activo` | ADMIN, VENTAS | Activar / desactivar |
 | PATCH | `/api/clientes/{id}/resetear-clave` | ADMIN, VENTAS | Restablecer contraseña: `{password}` |
+| POST | `/api/clientes/{id}/generar-clave-temporal` | ADMIN, VENTAS | Genera y devuelve una contraseña temporal aleatoria |
 
 ### Usuarios (`/api/usuarios`)
 
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
 | GET | `/api/usuarios` | ADMIN | Listar personal |
-| POST | `/api/usuarios` | ADMIN | Crear usuario: `{nombre, email, password, rol}` |
+| POST | `/api/usuarios` | ADMIN | Crear usuario: `{nombre, email, password, rol, telefono?, preguntaSeguridad?, respuestaSeguridad?}` |
 | PUT | `/api/usuarios/{id}` | ADMIN | Actualizar usuario |
 | PATCH | `/api/usuarios/{id}/activo` | ADMIN | Activar / desactivar |
+| POST | `/api/usuarios/{id}/generar-clave-temporal` | ADMIN | Genera y devuelve una contraseña temporal aleatoria |
+
+`rol` admite `ADMIN`, `VENTAS`, `COCINA` o `REPARTIDOR`.
 
 ### Dashboard y Salud
 
@@ -268,10 +313,53 @@ La respuesta incluye `produccionId` (nullable): cuando el pedido se crea desde e
 Los clientes del sitio público tienen tres modos de acceso en el modal de `home.html` y `catalogo.html`:
 
 1. **Sin cuenta (invitado):** ingresa solo nombre y teléfono; el pedido queda sin `clienteId`.
-2. **Registro:** crea cuenta con DNI obligatorio y contraseña (mínimo 6 caracteres); la contraseña se almacena hasheada con BCrypt.
+2. **Registro:** crea cuenta con DNI obligatorio, contraseña (mínimo 6 caracteres) y, opcionalmente, una pregunta de seguridad para recuperación; la contraseña se almacena hasheada con BCrypt.
 3. **Login:** ingresa DNI + contraseña; el backend valida con `POST /api/clientes/login`.
 
-El personal puede restablecer la contraseña de cualquier cliente desde `clientes.html` con el botón 🔑 de cada fila.
+El personal puede restablecer la contraseña de cualquier cliente desde `clientes.html` con el botón 🔑 de cada fila, o generar una clave temporal aleatoria.
+
+### Recuperación de contraseña con pregunta de seguridad
+
+Tanto el personal interno (`login.html`) como los clientes de la tienda web (`home.html` / `catalogo.html`) pueden recuperar su acceso sin intervención del administrador:
+
+1. El usuario ingresa su **email** (personal) o **DNI** (cliente).
+2. Si la cuenta tiene `pregunta_seguridad` configurada, el backend la devuelve (`POST .../forgot-password/pregunta`).
+3. El usuario responde; si la respuesta coincide (hasheada con BCrypt) con `respuesta_seguridad`, el backend genera y devuelve una **contraseña temporal aleatoria** (`POST .../forgot-password/verificar`) que el usuario debe cambiar después.
+4. Si la cuenta **no** tiene pregunta de seguridad configurada, la pantalla muestra los datos de contacto de un ADMIN (`GET /api/auth/admin-contacto`) para que el usuario solicite el restablecimiento manualmente.
+5. El personal puede cambiar su propia contraseña en cualquier momento desde su sesión con `PATCH /api/auth/cambiar-password` (requiere la contraseña actual).
+
+### Tienda web — Delivery con GPS y panel de repartidor
+
+En `carrito.html`, al confirmar el pedido el cliente elige entre **"Recojo en tienda"** o **"Delivery"**:
+
+- **Recojo:** `tipoOrigen: "TIENDA"`, sin datos adicionales.
+- **Delivery:** `tipoOrigen: "DELIVERY"`, requiere dirección y teléfono (referencia opcional). El teléfono se auto-rellena desde la sesión del cliente si existe.
+  - Botón **"Marcar mi ubicación actual"** usa la Geolocation API del navegador (sin API key) para capturar `lat,lng`.
+  - Todo se codifica en el campo `observacion` con el formato:
+    ```
+    Dir: {dirección} | Tel: {teléfono} | Ref: {referencia} | GPS: {lat},{lng} | {info del cliente}
+    ```
+
+En `pedidos.html` (panel admin), los pedidos delivery muestran un pin de ubicación (`bi-geo-alt-fill`) con link directo a Google Maps cuando hay coordenadas GPS.
+
+El **panel de repartidor** (`repartidor.html`, rol `REPARTIDOR`) consume `GET /api/pedidos/delivery` y organiza los pedidos en tres columnas:
+
+| Sección | Estado | Acción disponible |
+|---|---|---|
+| Para recoger | `LISTO` | "Salir a entregar" → `EN_CAMINO` |
+| En camino | `EN_CAMINO` | "Marcar entregado" → `ENTREGADO` |
+| Entregados hoy | `ENTREGADO` (hoy) | — |
+
+Cada tarjeta muestra: tiempo transcurrido desde la creación, dirección (con botón de copiar), referencia, lista de productos, botones de llamada/WhatsApp y link a Google Maps (por GPS o, si no hay coordenadas, por búsqueda de la dirección). Un resumen superior muestra contadores por estado y el total cobrado en entregas del día. La lista se auto-refresca cada 30 segundos.
+
+### Mis pedidos — Seguimiento e historial
+
+`mis-pedidos.html` permite a cualquier cliente ver el estado de sus pedidos:
+
+- **Clientes registrados** (con `clienteId` en sesión): carga automática vía `GET /api/pedidos/cliente/{clienteId}`.
+- **Invitados:** pueden buscar un pedido por número (`GET /api/pedidos/seguimiento/{id}`); los pedidos consultados se guardan en `localStorage` (`misPedidosWeb`, máx. 20) para mostrarlos automáticamente en visitas posteriores.
+
+Cada pedido se muestra con una línea de tiempo visual (4 pasos para recojo, 5 para delivery, incluyendo "En camino"); los pedidos `CANCELADO` ocultan la línea de tiempo y muestran un badge rojo. Los pedidos delivery muestran la dirección y un link "Ver en mapa". La página se auto-refresca cada 30 segundos. Tras crear un pedido desde `carrito.html`, el cliente recibe un link directo "Ver seguimiento" hacia esta página.
 
 ### POS — Flujo de venta completo
 
@@ -361,8 +449,11 @@ productos ──┬── recetas ── ingredientes            │   │
 | `nombre` | VARCHAR(100) NOT NULL | Nombre del empleado |
 | `email` | VARCHAR(120) UNIQUE NOT NULL | Correo (usado para login) |
 | `password_hash` | VARCHAR(255) NOT NULL | Contraseña hasheada con BCrypt |
-| `rol` | ENUM('ADMIN','VENTAS','COCINA') | Rol del sistema |
+| `rol` | ENUM('ADMIN','VENTAS','COCINA','REPARTIDOR') | Rol del sistema |
 | `activo` | TINYINT(1) DEFAULT 1 | Estado activo/inactivo |
+| `telefono` | VARCHAR(20) | Teléfono de contacto (usado en recuperación de clave / `admin-contacto`) |
+| `pregunta_seguridad` | VARCHAR(255) | Pregunta de seguridad para recuperar contraseña |
+| `respuesta_seguridad` | VARCHAR(255) | Respuesta hasheada con BCrypt |
 | `created_at` | TIMESTAMP | Fecha de creación |
 | `updated_at` | TIMESTAMP | Última modificación |
 
@@ -377,6 +468,8 @@ productos ──┬── recetas ── ingredientes            │   │
 | `telefono` | VARCHAR(20) | Teléfono de contacto |
 | `direccion` | VARCHAR(255) | Dirección fiscal / envío |
 | `email` | VARCHAR(150) | Correo electrónico |
+| `pregunta_seguridad` | VARCHAR(255) | Pregunta de seguridad para recuperar contraseña |
+| `respuesta_seguridad` | VARCHAR(255) | Respuesta hasheada con BCrypt |
 | `password_hash` | VARCHAR(100) | Contraseña para tienda web (BCrypt); NULL si no tiene cuenta |
 | `activo` | TINYINT(1) DEFAULT 1 | Estado activo/inactivo |
 | `created_at` | TIMESTAMP | Fecha de creación |
@@ -433,9 +526,9 @@ Restricción única: `(producto_id, ingrediente_id)`.
 | `cliente_id` | INT FK → clientes (nullable) | Cliente asociado (null si invitado) |
 | `usuario_id` | BIGINT FK → usuarios (nullable) | Empleado que registró el pedido |
 | `total` | DECIMAL(10,2) NOT NULL | Total calculado de la venta |
-| `estado` | ENUM | PENDIENTE · PARCIAL · PREPARACION · LISTO · ENTREGADO · CANCELADO |
-| `tipo_origen` | ENUM | PRESENCIAL · TIENDA · WHATSAPP · WEB |
-| `observacion` | TEXT | Nota libre (en POS se guarda el tipo de comprobante y datos del receptor) |
+| `estado` | ENUM | PENDIENTE · PARCIAL · PREPARACION · LISTO · **EN_CAMINO** · ENTREGADO · CANCELADO |
+| `tipo_origen` | ENUM | PRESENCIAL · TIENDA · WHATSAPP · WEB · **DELIVERY** |
+| `observacion` | TEXT | Nota libre (en POS se guarda el tipo de comprobante y datos del receptor; en delivery se guarda dirección/teléfono/referencia/GPS) |
 | `created_at` | DATETIME | Fecha/hora de creación |
 | `fecha` | TIMESTAMP | Timestamp automático |
 | `updated_at` | TIMESTAMP | Última modificación |
@@ -520,6 +613,21 @@ El motivo `CANCELACION` (ENTRADA) se registra cuando una orden de producción es
 >   MODIFY COLUMN motivo ENUM('COMPRA','PRODUCCION','CANCELACION','MERMA','AJUSTE_MANUAL') NOT NULL;
 > ```
 
+> **Migraciones requeridas** para el rol Repartidor, delivery con GPS y recuperación de contraseña — ver el bloque completo al final de [`docs/schema.sql`](docs/schema.sql):
+> ```sql
+> ALTER TABLE usuarios MODIFY COLUMN rol ENUM('ADMIN','VENTAS','COCINA','REPARTIDOR') NOT NULL;
+> ALTER TABLE pedidos
+>   MODIFY COLUMN estado ENUM('PENDIENTE','PARCIAL','PREPARACION','LISTO','EN_CAMINO','ENTREGADO','CANCELADO'),
+>   MODIFY COLUMN tipo_origen ENUM('TIENDA','PRESENCIAL','WHATSAPP','WEB','DELIVERY');
+> ALTER TABLE usuarios
+>   ADD COLUMN telefono VARCHAR(20) DEFAULT NULL,
+>   ADD COLUMN pregunta_seguridad VARCHAR(255) DEFAULT NULL,
+>   ADD COLUMN respuesta_seguridad VARCHAR(255) DEFAULT NULL;
+> ALTER TABLE clientes
+>   ADD COLUMN pregunta_seguridad VARCHAR(255) DEFAULT NULL,
+>   ADD COLUMN respuesta_seguridad VARCHAR(255) DEFAULT NULL;
+> ```
+
 ---
 
 ## Seguridad
@@ -535,9 +643,9 @@ El motivo `CANCELACION` (ENTRADA) se registra cuando una orden de producción es
 
 ## Historial de cambios relevantes
 
-### Rediseño del login del personal (`index.html`)
+### Rediseño del login del personal (`login.html`)
 
-La pantalla de login pasó de un formulario centrado simple a un layout de dos columnas:
+La pantalla de login del personal se movió de `index.html` (que ahora solo redirige a `home.html`) a `login.html`, y pasó de un formulario centrado simple a un layout de dos columnas:
 
 - **Columna izquierda:** panel de marca con degradado ámbar, logo con efecto glassmorphism y pills descriptivos de las funciones clave del sistema.
 - **Columna derecha:** formulario blanco con inputs con icono, toggle de visibilidad de contraseña y spinner de carga durante el login.
@@ -575,3 +683,39 @@ Antes, cancelar una orden de producción solo cambiaba su estado sin devolver lo
 ### Stock de ingredientes en `BigDecimal`
 
 El campo `stock` y `stock_minimo` de ingredientes se mapeaban como `Integer` en Java, truncando valores decimales (ej. 0.5 kg). Ahora se usan como `BigDecimal` en toda la cadena: entidades, DTOs, servicios y respuestas de la API.
+
+### Movimientos de stock de ingredientes desde el panel (`ingredientes.html`)
+
+Cada fila de `ingredientes.html` ahora tiene dos botones de acción rápida:
+
+- **"+ Stock"** (verde): registra una entrada con motivo `COMPRA`.
+- **"− Merma"** (ámbar): registra una salida con motivo `MERMA` o `AJUSTE_MANUAL`, con checkbox de confirmación obligatorio.
+
+Ambos abren el mismo modal `movimientoStockModal`, que cambia título/color según el tipo. En el backend, `IngredienteService.registrarMovimiento` ahora asigna `referenciaTipo = "MANUAL"` por defecto si no se especifica.
+
+### Nuevo rol `REPARTIDOR` y panel de delivery
+
+Se agregó un cuarto rol de personal dedicado a la gestión de entregas:
+
+- **Backend:** `RolUsuario.REPARTIDOR`; `SecurityConfig` permite a `REPARTIDOR` consultar `GET /api/pedidos/delivery` y cambiar estado con `PATCH /api/pedidos/{id}/estado`.
+- **Frontend:** nuevo `repartidor.html` + `repartidor.js` (panel mobile-first, auto-refresh cada 30s, resumen del día, WhatsApp/llamada/mapa por pedido). El rol se agregó a `ROL_ACCESO`, `rolLabel` y al selector de `usuarios.html` (con ícono de scooter y color verde). Todas las páginas admin tienen un link "Panel Repartidores" en el sidebar.
+
+### Delivery con dirección + GPS desde la tienda web
+
+`carrito.html` ahora ofrece un modal de selección de entrega: **"Recojo en tienda"** vs **"Delivery"**. El modo delivery agrega `tipoOrigen: "DELIVERY"`, un nuevo estado `EN_CAMINO` en el ciclo de vida del pedido, y captura dirección/teléfono/referencia/GPS (vía Geolocation API del navegador, sin API key), todo codificado en `observacion`. El panel admin (`pedidos.html`) y el panel de repartidor muestran un pin con link a Google Maps cuando hay coordenadas.
+
+### "Mis pedidos" — seguimiento e historial para clientes
+
+Nueva página `mis-pedidos.html` + `mis-pedidos.js`: los clientes registrados ven su historial automáticamente (`GET /api/pedidos/cliente/{clienteId}`); los invitados pueden buscar por número de pedido (`GET /api/pedidos/seguimiento/{id}`), guardado en `localStorage` para futuras visitas. Incluye línea de tiempo visual del estado y, para delivery, link a la dirección en el mapa. Tras crear un pedido, `carrito.js` muestra un link directo "Ver seguimiento".
+
+### Recuperación de contraseña con pregunta de seguridad
+
+Tanto el personal (`login.html`, nuevo — separado del antiguo `index.html`, que ahora solo redirige a `home.html`) como los clientes de la tienda web pueden recuperar su contraseña respondiendo una pregunta de seguridad configurada al registrarse. Si no la tienen configurada, se les muestra el contacto de un ADMIN (`GET /api/auth/admin-contacto`). Nuevos campos `pregunta_seguridad` / `respuesta_seguridad` (hasheada con BCrypt) en `usuarios` y `clientes`, y un nuevo campo `telefono` en `usuarios`.
+
+### `API_BASE` dinámico (`frontend/assets/js/api.js`)
+
+Antes `API_BASE` era un valor fijo (`http://localhost:8080`). Ahora se detecta automáticamente según `window.location.hostname`: red local/celular (`http://<IP>:8080`), Dev Tunnels de VS Code (reemplaza el puerto del túnel de frontend por el de backend), o `localhost`. Todos los HTML deben cargar `api.js` antes que cualquier otro script que use `API_BASE`.
+
+### Sidebar — "Movimientos" solo visible para `ADMIN`
+
+El link a `movimientos.html` ahora vive en el grupo del sidebar con `data-roles="ADMIN"`. Se agregó la regla CSS `.sidebar-group[data-roles] { display: none; }` para evitar un flash de contenido antes de que `filtrarNavPorRol()` aplique `display: 'block'` (explícito, no `''`) al grupo correspondiente al rol del usuario.

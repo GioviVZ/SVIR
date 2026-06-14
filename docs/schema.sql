@@ -10,14 +10,17 @@ USE reposteria;
 
 -- ─── USUARIOS ────────────────────────────────────────────────────────────────
 CREATE TABLE `usuarios` (
-  `id`            INT            NOT NULL AUTO_INCREMENT,
-  `nombre`        VARCHAR(100)   NOT NULL,
-  `email`         VARCHAR(120)   NOT NULL,
-  `password_hash` VARCHAR(255)   NOT NULL,
-  `rol`           ENUM('ADMIN','VENTAS','COCINA','REPARTIDOR') NOT NULL,
-  `activo`        TINYINT(1)     NOT NULL DEFAULT 1,
-  `created_at`    TIMESTAMP      NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`    TIMESTAMP      NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id`                  INT            NOT NULL AUTO_INCREMENT,
+  `nombre`              VARCHAR(100)   NOT NULL,
+  `email`               VARCHAR(120)   NOT NULL,
+  `password_hash`       VARCHAR(255)   NOT NULL,
+  `rol`                 ENUM('ADMIN','VENTAS','COCINA','REPARTIDOR') NOT NULL,
+  `activo`              TINYINT(1)     NOT NULL DEFAULT 1,
+  `telefono`            VARCHAR(20)    DEFAULT NULL,
+  `pregunta_seguridad`  VARCHAR(255)   DEFAULT NULL,
+  `respuesta_seguridad` VARCHAR(255)   DEFAULT NULL,  -- respuesta hasheada con BCrypt
+  `created_at`          TIMESTAMP      NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`          TIMESTAMP      NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -31,6 +34,8 @@ CREATE TABLE `clientes` (
   `telefono`      VARCHAR(20)  DEFAULT NULL,
   `direccion`     VARCHAR(255) DEFAULT NULL,
   `email`         VARCHAR(150) DEFAULT NULL,
+  `pregunta_seguridad`  VARCHAR(255) DEFAULT NULL,
+  `respuesta_seguridad` VARCHAR(255) DEFAULT NULL,  -- respuesta hasheada con BCrypt
   `password_hash` VARCHAR(100) DEFAULT NULL,  -- contraseña para tienda web (BCrypt); NULL si no tiene cuenta
   `activo`        TINYINT(1)   NOT NULL DEFAULT 1,
   `created_at`    TIMESTAMP    NULL DEFAULT CURRENT_TIMESTAMP,
@@ -179,3 +184,21 @@ CREATE TABLE `movimientos_ingrediente` (
   CONSTRAINT `fk_mov_ing_ingrediente` FOREIGN KEY (`ingrediente_id`) REFERENCES `ingredientes` (`id`),
   CONSTRAINT `fk_mov_ing_usuario`     FOREIGN KEY (`usuario_id`)     REFERENCES `usuarios`     (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ─── MIGRACIONES PARA BASES DE DATOS EXISTENTES ───────────────────────────────
+-- Ejecutar solo si la base ya existía antes de estos cambios (ddl-auto=none).
+
+-- Rol REPARTIDOR + estado/origen de delivery:
+-- ALTER TABLE usuarios MODIFY COLUMN rol ENUM('ADMIN','VENTAS','COCINA','REPARTIDOR') NOT NULL;
+-- ALTER TABLE pedidos
+--   MODIFY COLUMN estado ENUM('PENDIENTE','PARCIAL','PREPARACION','LISTO','EN_CAMINO','ENTREGADO','CANCELADO'),
+--   MODIFY COLUMN tipo_origen ENUM('TIENDA','PRESENCIAL','WHATSAPP','WEB','DELIVERY');
+
+-- Recuperación de contraseña con pregunta de seguridad + teléfono de personal:
+-- ALTER TABLE usuarios
+--   ADD COLUMN telefono VARCHAR(20) DEFAULT NULL,
+--   ADD COLUMN pregunta_seguridad VARCHAR(255) DEFAULT NULL,
+--   ADD COLUMN respuesta_seguridad VARCHAR(255) DEFAULT NULL;
+-- ALTER TABLE clientes
+--   ADD COLUMN pregunta_seguridad VARCHAR(255) DEFAULT NULL,
+--   ADD COLUMN respuesta_seguridad VARCHAR(255) DEFAULT NULL;
