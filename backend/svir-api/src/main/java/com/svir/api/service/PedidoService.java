@@ -144,6 +144,14 @@ public class PedidoService {
         }).toList();
     }
 
+    public List<PedidoResponse> listarPorCliente(Long clienteId) {
+        return pedidoRepository.findByClienteIdOrderByCreatedAtDesc(clienteId).stream().map(pedido -> {
+            List<DetallePedido> detalles = detallePedidoRepository.findByPedidoIdOrderByIdAsc(pedido.getId());
+            boolean requiereProduccion = detalles.stream().anyMatch(d -> d.getCantidadAtendida() < d.getCantidad());
+            return toResponse(pedido, detalles, requiereProduccion);
+        }).toList();
+    }
+
     public List<PedidoResponse> listarDeliveryActivos() {
         List<Pedido> activos = pedidoRepository.findActivosByTipoOrigen(TipoOrigenPedido.DELIVERY);
         List<Pedido> entregadosHoy = pedidoRepository.findByTipoOrigenAndEstadoAndCreatedAtAfter(

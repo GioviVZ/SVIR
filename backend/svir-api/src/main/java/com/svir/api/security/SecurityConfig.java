@@ -50,6 +50,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/productos/**").hasAnyRole("ADMIN", "VENTAS")
                         // Pedidos web sin autenticación (tienda online)
                         .requestMatchers(HttpMethod.POST, "/api/pedidos").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/pedidos/cliente/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/pedidos/seguimiento/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/pedidos/delivery").hasAnyRole("ADMIN", "VENTAS", "REPARTIDOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/estado").hasAnyRole("ADMIN", "VENTAS", "REPARTIDOR")
                         .requestMatchers("/api/pedidos/**").hasAnyRole("ADMIN", "VENTAS")

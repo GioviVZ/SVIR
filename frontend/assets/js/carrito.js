@@ -208,19 +208,23 @@ async function procesarPedidoConEntrega() {
   if (btn) { btn.disabled = true; btn.textContent = "Procesando..."; }
 
   try {
-    await apiFetch("/api/pedidos", { method: "POST", body: JSON.stringify(payload) });
+    const pedido = await apiFetch("/api/pedidos", { method: "POST", body: JSON.stringify(payload) });
 
     if (_entregaModal) _entregaModal.hide();
 
     guardarCarrito([]);
     renderCarrito();
     actualizarContadorCarrito();
+    agregarPedidoAlHistorial(pedido.id);
 
     const esDelivery = _tipoEntrega === "delivery";
-    msgPage.className = "mt-3 small checkout-result exito";
-    msgPage.innerHTML = esDelivery
+    const mensajeBase = esDelivery
       ? `<i class="bi bi-scooter me-1"></i>¡Pedido registrado! Te enviaremos tu pedido a domicilio.`
       : `<i class="bi bi-check-circle-fill me-1"></i>¡Pedido registrado! Pasa a recogerlo cuando esté listo.`;
+
+    msgPage.className = "mt-3 small checkout-result exito";
+    msgPage.innerHTML = `${mensajeBase}<br>Pedido <strong>#${pedido.id}</strong> ·
+      <a href="mis-pedidos.html" class="fw-semibold">Ver seguimiento</a>`;
 
   } catch (error) {
     if (_entregaModal) _entregaModal.hide();

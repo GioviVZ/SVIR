@@ -28,4 +28,6 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     @Query("SELECT p FROM Pedido p WHERE p.tipoOrigen = :origen AND p.estado = :estado AND p.createdAt >= :desde ORDER BY p.createdAt DESC")
     List<Pedido> findByTipoOrigenAndEstadoAndCreatedAtAfter(@Param("origen") TipoOrigenPedido origen, @Param("estado") EstadoPedido estado, @Param("desde") LocalDateTime desde);
+
+    List<Pedido> findByClienteIdOrderByCreatedAtDesc(Long clienteId);
 }

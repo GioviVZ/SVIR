@@ -26,6 +26,18 @@ function cerrarSesionCliente() {
   window.location.reload();
 }
 
+// ── Historial local de pedidos (para invitados) ────────────────────
+function obtenerHistorialPedidosWeb() {
+  return JSON.parse(localStorage.getItem("misPedidosWeb") || "[]");
+}
+
+function agregarPedidoAlHistorial(id) {
+  let historial = obtenerHistorialPedidosWeb().filter(x => x !== id);
+  historial.unshift(id);
+  if (historial.length > 20) historial = historial.slice(0, 20);
+  localStorage.setItem("misPedidosWeb", JSON.stringify(historial));
+}
+
 // ── Navbar: actualiza según estado de sesión ───────────────────────
 function actualizarNavCliente() {
   const cliente = obtenerClienteWeb();

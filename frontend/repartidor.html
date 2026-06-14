@@ -66,6 +66,36 @@
     .maps-link { color: #6d28d9; font-size: .82rem; font-weight: 600; text-decoration: none; }
     .maps-link:hover { text-decoration: underline; }
 
+    .wa-link { color: #15803d; font-size: .82rem; font-weight: 600; text-decoration: none; }
+    .wa-link:hover { text-decoration: underline; }
+
+    .copy-btn {
+      background: transparent; border: none; color: #94a3b8; padding: 0 4px; line-height: 1; font-size: .85rem;
+    }
+    .copy-btn:hover { color: #475569; }
+
+    .items-list {
+      list-style: none; padding: 0; margin: 6px 0 0;
+      font-size: .8rem; color: #475569;
+      background: #f8fafc; border-radius: 8px; padding: 6px 10px;
+    }
+    .items-list li { line-height: 1.5; }
+
+    .rep-summary {
+      display: flex; gap: 8px; padding: 10px 12px 0; flex-wrap: wrap;
+    }
+    .summary-chip {
+      flex: 1; min-width: 80px; background: #fff; border-radius: 12px; padding: 8px 10px;
+      text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .summary-chip .chip-value { font-size: 1.1rem; font-weight: 700; color: #1e293b; }
+    .summary-chip .chip-label { font-size: .68rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; }
+
+    .section-count {
+      display: inline-block; background: #e2e8f0; color: #475569; font-size: .68rem;
+      font-weight: 700; border-radius: 20px; padding: 1px 7px; margin-left: 6px;
+    }
+
     #spinnerCarga { display: flex; justify-content: center; padding: 40px; }
   </style>
 </head>
@@ -94,21 +124,41 @@
 
   <div id="contenidoRep" class="d-none pb-5">
 
+    <!-- Resumen del día -->
+    <div class="rep-summary">
+      <div class="summary-chip">
+        <div class="chip-value" id="contadorListo">0</div>
+        <div class="chip-label">Por recoger</div>
+      </div>
+      <div class="summary-chip">
+        <div class="chip-value" id="contadorEnCamino">0</div>
+        <div class="chip-label">En camino</div>
+      </div>
+      <div class="summary-chip">
+        <div class="chip-value" id="contadorEntregados">0</div>
+        <div class="chip-label">Entregados</div>
+      </div>
+      <div class="summary-chip">
+        <div class="chip-value" id="totalEntregadoHoy">S/ 0.00</div>
+        <div class="chip-label">Cobrado hoy</div>
+      </div>
+    </div>
+
     <!-- Para recoger -->
     <div id="seccionListo">
-      <div class="rep-section-title"><i class="bi bi-bag-check me-1"></i>Para recoger en tienda</div>
+      <div class="rep-section-title"><i class="bi bi-bag-check me-1"></i>Para recoger en tienda<span class="section-count" id="badgeListo"></span></div>
       <div id="listaPendientes"></div>
     </div>
 
     <!-- En camino -->
     <div id="seccionEnCamino">
-      <div class="rep-section-title"><i class="bi bi-scooter me-1"></i>En camino</div>
+      <div class="rep-section-title"><i class="bi bi-scooter me-1"></i>En camino<span class="section-count" id="badgeEnCamino"></span></div>
       <div id="listaEnCamino"></div>
     </div>
 
     <!-- Entregados hoy -->
     <div id="seccionEntregados">
-      <div class="rep-section-title"><i class="bi bi-check2-circle me-1"></i>Entregados hoy</div>
+      <div class="rep-section-title"><i class="bi bi-check2-circle me-1"></i>Entregados hoy<span class="section-count" id="badgeEntregados"></span></div>
       <div id="listaEntregados"></div>
     </div>
 
@@ -117,6 +167,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/auth.js"></script>
-  <script src="assets/js/repartidor.js?v=1"></script>
+  <script src="assets/js/repartidor.js?v=3"></script>
 </body>
 </html>
